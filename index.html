@@ -3,19 +3,37 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bambino App</title>
+<title>Merrion Shop</title>
 
 <style>
+
 body{
   font-family:Arial;
   text-align:center;
   padding:20px;
 }
 
+.logo{
+  width:140px;
+  margin:auto;
+  display:block;
+}
+
+.title{
+  font-size:26px;
+  margin-top:10px;
+}
+
+.date{
+  font-size:14px;
+  color:#777;
+  margin-bottom:15px;
+}
+
 .tabBtn{
-  font-size:18px;
-  padding:10px 20px;
+  padding:10px 15px;
   margin:5px;
+  font-size:16px;
 }
 
 .section{
@@ -26,11 +44,17 @@ body{
   display:block;
 }
 
+.left{
+  text-align:left;
+  max-width:400px;
+  margin:auto;
+}
+
 .row{
   display:flex;
-  justify-content:center;
-  gap:10px;
-  margin:10px;
+  justify-content:space-between;
+  align-items:center;
+  margin:10px 0;
 }
 
 input{
@@ -40,83 +64,128 @@ input{
 }
 
 select{
-  font-size:18px;
+  width:150px;
+  font-size:16px;
+}
+
+.bigInput{
+  font-size:20px;
+  width:200px;
+  text-align:center;
+  margin-bottom:15px;
 }
 
 button{
-  font-size:20px;
   margin-top:20px;
+  font-size:20px;
 }
+
+.hidden{
+  display:none;
+}
+
+.bold{
+  font-weight:bold;
+}
+
 </style>
 </head>
 
 <body>
 
-<h2>Bambino Control</h2>
+<img src="icon.png" class="logo">
+
+<div class="title">MERRION SHOP</div>
+<div id="todayDate" class="date"></div>
 
 <button class="tabBtn" onclick="showTab('sales')">Sales Form</button>
 <button class="tabBtn" onclick="showTab('stock')">Stock Form</button>
 <button class="tabBtn" onclick="showTab('drop')">Last Drop</button>
 
-<!-- SALES FORM -->
+<div id="lastUpdate" class="date hidden"></div>
+<button id="newBtn" class="hidden" onclick="resetForm()">New Submit</button>
+
+<!-- SALES -->
 <div id="sales" class="section">
 
-<h3>Sales Form</h3>
+<input id="salesUser" class="bigInput" placeholder="Your name">
 
-<input id="salesUser" placeholder="Your name"><br><br>
+<div class="left">
 
-<select id="weather">
-  <option value="">Weather</option>
-  <option>Sunny</option>
-  <option>Cloudy</option>
-  <option>Rainy</option>
-  <option>Storm</option>
-</select>
+<div class="row">
+  <span>Weather Forecast</span>
+  <select id="weather">
+    <option value=""></option>
+    <option>Sunny</option>
+    <option>Cloudy</option>
+    <option>Rainy</option>
+    <option>Storm</option>
+  </select>
+</div>
 
-<select id="traffic">
-  <option value="">Traffic</option>
-  <option>Quiet</option>
-  <option>Normal</option>
-  <option>Busy</option>
-</select>
+<div class="row">
+  <span>How's today going?</span>
+  <select id="traffic">
+    <option value=""></option>
+    <option>Quiet</option>
+    <option>Normal</option>
+    <option>Busy</option>
+  </select>
+</div>
+
+<h3 style="text-align:center;">Sales Info</h3>
 
 <div id="salesForm"></div>
+
+</div>
 
 <button onclick="submitSales()">Submit Sales</button>
 
 </div>
 
 
-<!-- STOCK FORM -->
+<!-- STOCK -->
 <div id="stock" class="section">
 
-<h3>Stock Form</h3>
+<input id="stockUser" class="bigInput" placeholder="Your name">
 
-<input id="stockUser" placeholder="Your name"><br><br>
+<div class="left">
+
+<h3 style="text-align:center;">Stock Info</h3>
 
 <div id="stockForm"></div>
+
+</div>
 
 <button onclick="submitStock()">Submit Stock</button>
 
 </div>
 
 
-<!-- LAST DROP -->
+<!-- DROP -->
 <div id="drop" class="section">
-
 <h3>Last Drop Info</h3>
-
 <div id="dropData"></div>
-
 </div>
 
 
 <script>
 
-const URL = "https://script.google.com/macros/s/AKfycbyX7Jg77jmKU_N7UnZzP8nSwpnpnjwbFgvx8s3DtptlnYUl_VDZAb73uZ7K09_Jbpc2/exec";
+const URL = "https://script.google.com/macros/s/AKfycbygCgjhyeD8TWDWPXsN30m4876sVgeEtoqFhyLvDCTk1QII4tILZZgVXw7pWYbhIGli/exec";
 
-/* TABS */
+/* DATE */
+function setDate(){
+  const today = new Date();
+  document.getElementById("todayDate").innerText =
+    today.toLocaleDateString('en-GB',{
+      weekday:'long',
+      day:'numeric',
+      month:'long'
+    });
+}
 
+
+/* TAB CONTROL */
 function showTab(tab){
 
   document.querySelectorAll(".section")
@@ -124,102 +193,143 @@ function showTab(tab){
 
   document.getElementById(tab).classList.add("active");
 
-  if(tab === "drop") loadDrop();
+  if(tab === "sales" || tab === "stock"){
+    if(!window.loaded){
+      loadPizzas();
+      window.loaded = true;
+    }
+  }
+
+  if(tab === "drop"){
+    loadDrop();
+  }
 }
 
 
 /* LOAD PIZZAS */
-
 async function loadPizzas(){
 
   const res = await fetch(`${URL}?action=getPizzas`);
   const pizzas = await res.json();
 
-  const salesDiv = document.getElementById("salesForm");
-  const stockDiv = document.getElementById("stockForm");
+  pizzas.forEach(p=>{
 
-  pizzas.forEach(p => {
-
-    salesDiv.innerHTML += `
+    document.getElementById("salesForm").innerHTML += `
       <div class="row">
-        <span>${p}</span>
-        <input type="number" id="sales_${p}">
+        <span class="bold">${p}</span>
+        <input id="sales_${p}" type="number">
       </div>
     `;
 
-    stockDiv.innerHTML += `
+    document.getElementById("stockForm").innerHTML += `
       <div class="row">
-        <span>${p}</span>
-        <input type="number" id="stock_${p}">
+        <span class="bold">${p}</span>
+        <input id="stock_${p}" type="number">
       </div>
     `;
 
   });
+}
 
+
+/* BLOCK FORM */
+function blockForm(){
+  document.querySelectorAll("input, select, button")
+    .forEach(el=>{
+      if(el.id !== "newBtn") el.disabled = true;
+    });
+}
+
+
+/* LAST UPDATE */
+function showLastUpdate(date){
+  const d = new Date(date);
+  const text = d.toLocaleDateString('en-GB') +
+    " at " + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+  const el = document.getElementById("lastUpdate");
+  el.innerText = "Last update at " + text;
+  el.classList.remove("hidden");
+
+  document.getElementById("newBtn").classList.remove("hidden");
+}
+
+
+/* RESET */
+function resetForm(){
+  location.reload();
 }
 
 
 /* SUBMIT SALES */
-
 async function submitSales(){
+
+  if(!confirm("Are you sure?")) return;
+
+  blockForm();
 
   const user = document.getElementById("salesUser").value;
   const weather = document.getElementById("weather").value;
   const traffic = document.getElementById("traffic").value;
 
-  const inputs = document.querySelectorAll("[id^=sales_]");
-
   const pizzas=[];
 
-  inputs.forEach(i=>{
+  document.querySelectorAll("[id^=sales_]").forEach(i=>{
     pizzas.push({
       name: i.id.replace("sales_",""),
       qty: Number(i.value)||0
     });
   });
 
-  await fetch(`${URL}?action=submitSales&data=${encodeURIComponent(JSON.stringify({
+  const res = await fetch(`${URL}?action=submitSales&data=${encodeURIComponent(JSON.stringify({
     user, weather, traffic, pizzas
   }))}`);
 
-  alert("Sales saved");
+  const data = await res.json();
+
+  alert("Submitted");
+
+  showLastUpdate(data.timestamp);
 }
 
 
 /* SUBMIT STOCK */
-
 async function submitStock(){
+
+  if(!confirm("Are you sure?")) return;
+
+  blockForm();
 
   const user = document.getElementById("stockUser").value;
 
-  const inputs = document.querySelectorAll("[id^=stock_]");
-
   const pizzas=[];
 
-  inputs.forEach(i=>{
+  document.querySelectorAll("[id^=stock_]").forEach(i=>{
     pizzas.push({
       name: i.id.replace("stock_",""),
       qty: Number(i.value)||0
     });
   });
 
-  await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
+  const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
     user, pizzas
   }))}`);
 
-  alert("Stock saved");
+  const data = await res.json();
+
+  alert("Submitted");
+
+  showLastUpdate(data.timestamp);
 }
 
 
 /* LOAD DROP */
-
 async function loadDrop(){
 
   const res = await fetch(`${URL}?action=getLastDrop`);
   const data = await res.json();
 
   const div = document.getElementById("dropData");
-
   div.innerHTML="";
 
   data.forEach(d=>{
@@ -230,14 +340,10 @@ async function loadDrop(){
       </div>
     `;
   });
-
 }
 
 
-/* INIT */
-
-loadPizzas();
-showTab('sales');
+setDate();
 
 </script>
 

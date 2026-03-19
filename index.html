@@ -13,13 +13,15 @@ body{
 }
 
 .logo{
-  width:140px;
+  width:200px;
   margin:auto;
   display:block;
+  margin-bottom:10px;
 }
 
 .title{
   font-size:28px; 
+  font-weight:bold;
   margin-top:10px;
 }
 
@@ -62,13 +64,17 @@ body{
 }
 
 .row input, .row select{
-  width:60px; /* casi cuadrados */
+  width:70px;
+  height:70px;
   font-size:20px;
   text-align:center; 
+  box-sizing:border-box;
+  border:1px solid #ccc;
+  border-radius:4px;
 }
 
 .row input.whole{
-  text-align:right; /* Whole pies alineados a la derecha */
+  text-align:right;
 }
 
 .row input.slice{
@@ -83,7 +89,8 @@ body{
 }
 
 select{
-  width:200px; /* dropdown más largo */
+  width:600px; 
+  font-size:48px;
 }
 
 button{
@@ -115,7 +122,7 @@ button{
 
 #dropData .header{
   font-weight:bold;
-  font-size:22px; /* más grande que antes */
+  font-size:22px; 
 }
 
 #dropData .cell{
@@ -190,7 +197,6 @@ button{
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbzCkV1ETniuZLTvxvV4IJNJ2hoRBs_0qyTOCtyhxMS4QHAxDDGVdl8O3JCSnGOj0G8a/exec";
 
-/* DATE */
 function setDate(){
   const today = new Date();
   document.getElementById("todayDate").innerText =
@@ -201,7 +207,6 @@ function setDate(){
     });
 }
 
-/* TAB CONTROL */
 function showTab(tab){
   document.querySelectorAll(".section")
     .forEach(s => s.classList.remove("active"));
@@ -220,13 +225,12 @@ function showTab(tab){
   }
 }
 
-/* LOAD PIZZAS */
 async function loadPizzas(){
   const res = await fetch(`${URL}?action=getPizzas`);
   const pizzas = await res.json();
 
   const formDiv = document.getElementById("stockForm");
-  formDiv.innerHTML = ""; // limpio
+  formDiv.innerHTML = ""; 
 
   // headers
   formDiv.innerHTML += `
@@ -251,7 +255,7 @@ async function loadPizzas(){
   if(saved.pizzas){
     saved.pizzas.forEach(p=>{
       const whole = Math.floor(p.qty);
-      const slice = Math.round((p.qty - whole) * 0.8*10)/10; // reconstruimos slice
+      const slice = Math.round((p.qty - whole) * 0.8*10)/10;
       const elWhole = document.getElementById("whole_" + p.name);
       const elSlice = document.getElementById("slice_" + p.name);
       if(elWhole) elWhole.value = whole;
@@ -263,7 +267,6 @@ async function loadPizzas(){
     if(saved.timestamp) showLastUpdate(saved.timestamp);
     document.getElementById("newBtn").classList.remove("hidden");
 
-    // BLOQUEAR inputs y botón submit
     document.getElementById("stockUser").disabled = true;
     document.getElementById("weather").disabled = true;
     document.getElementById("traffic").disabled = true;
@@ -277,7 +280,6 @@ async function loadPizzas(){
   }
 }
 
-/* RESET FORM */
 function resetForm(){
   document.getElementById("stockUser").value = "";
   document.getElementById("weather").value = "";
@@ -299,7 +301,6 @@ function resetForm(){
   localStorage.removeItem("lastStockSubmit");
 }
 
-/* BLOCK FORM */
 function blockForm(){
   document.querySelectorAll("input, select, button")
     .forEach(el=>{
@@ -308,7 +309,6 @@ function blockForm(){
     });
 }
 
-/* LAST UPDATE */
 function showLastUpdate(date){
   const d = new Date(date);
   const text = d.toLocaleDateString('en-GB') +
@@ -319,7 +319,6 @@ function showLastUpdate(date){
   el.classList.remove("hidden");
 }
 
-/* SUBMIT STOCK */
 async function submitStock(){
   if(!confirm("Are you sure?")) return;
 
@@ -335,10 +334,7 @@ async function submitStock(){
     const whole = Number(i.value)||0;
     const slice = Number(document.getElementById("slice_" + name).value)||0;
     const total = whole + slice/0.8;
-    pizzas.push({
-      name,
-      qty: total
-    });
+    pizzas.push({name, qty: total});
   });
 
   const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
@@ -346,10 +342,8 @@ async function submitStock(){
   }))}`);
 
   const data = await res.json();
-
   alert("Submitted");
 
-  // Guardamos en localStorage
   localStorage.setItem("lastStockSubmit", JSON.stringify({
     user, weather, traffic, pizzas, timestamp: data.timestamp
   }));
@@ -357,7 +351,6 @@ async function submitStock(){
   showLastUpdate(data.timestamp);
   document.getElementById("newBtn").classList.remove("hidden");
 
-  // BLOQUEAR inputs y botón submit
   document.getElementById("stockUser").disabled = true;
   document.getElementById("weather").disabled = true;
   document.getElementById("traffic").disabled = true;
@@ -370,7 +363,6 @@ async function submitStock(){
   document.getElementById("submitStockBtn").disabled = true;
 }
 
-/* LOAD DROP */
 async function loadDrop(){
   const res = await fetch(`${URL}?action=getLastDrop`);
   const data = await res.json();

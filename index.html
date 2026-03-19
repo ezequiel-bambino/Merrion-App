@@ -12,7 +12,7 @@ body{
   padding:20px;
 }
 
-/* LOGO MÁS GRANDE */
+/* LOGO */
 .logo{
   width:200px;
   margin:auto;
@@ -20,7 +20,7 @@ body{
   margin-bottom:10px;
 }
 
-/* TÍTULO EN BOLD */
+/* TITLE */
 .title{
   font-size:28px; 
   font-weight:bold;
@@ -52,55 +52,53 @@ body{
   margin:0 auto;
 }
 
-/* STOCK INFO - estilo tabla invisible */
+/* WEATHER + TRAFFIC MÁS ESPACIADO */
+.row{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin:20px 0; /* MÁS espacio entre renglones */
+}
+
+/* DROPDOWNS MÁS CORTOS Y CENTRADOS */
+.row select{
+  width:300px; /* mitad de antes */
+  font-size:20px;
+  text-align:center;
+}
+
+.row select option{
+  text-align:center;
+}
+
+/* STOCK INFO GRID */
 #stockForm{
   display:grid;
-  grid-template-columns: 1fr 120px 120px; /* Pizza | Whole | Slice */
-  gap:10px 20px;
+  grid-template-columns: 1fr 100px 100px; /* más compactos */
+  gap:12px 20px;
   align-items:center;
+  margin-top:10px;
 }
 
-#stockForm .row{
-  display:contents; /* usamos grid del contenedor */
-}
-
-#stockForm span.bold{
+#stockForm span{
   text-align:left;
   font-size:20px;
 }
 
-#stockForm input.whole, 
-#stockForm input.slice{
-  font-size:20px;
-  padding:8px 6px; /* altura y largura decentes */
-  text-align:center;
-  width:100%;
-  box-sizing:border-box;
-}
-
-#stockForm input.whole{
-  text-align:right;
-}
-
-#stockForm input.slice{
-  text-align:center;
-}
-
-/* Headers */
 #stockForm .header{
   font-weight:bold;
   font-size:22px;
-  text-align:left;
-  padding-bottom:6px;
 }
 
-/* Dropdowns más anchos */
-.row select{
-  width:600px; /* 3 veces más largo */
+/* INPUTS MÁS CORTOS Y CENTRADOS */
+#stockForm input{
   font-size:20px;
+  padding:6px;
+  width:100%;
+  text-align:center; /* CENTRADO */
+  box-sizing:border-box;
 }
 
-/* Inputs grandes para nombre */
 .bigInput{
   font-size:22px;
   width:220px;
@@ -117,18 +115,14 @@ button{
   display:none;
 }
 
-.bold{
-  font-weight:bold;
-}
-
 #lastUpdate{
   margin-top:10px;
 }
 
-/* Last Drop: grid tabla centrada */
+/* LAST DROP */
 #dropData{
   display:grid;
-  grid-template-columns: auto 60px; /* pizza | qty */
+  grid-template-columns: auto 60px;
   justify-content:center;
   gap:20px;
   row-gap:6px;
@@ -137,7 +131,7 @@ button{
 
 #dropData .header{
   font-weight:bold;
-  font-size:22px; /* más grande que antes */
+  font-size:22px;
 }
 
 #dropData .cell{
@@ -146,7 +140,6 @@ button{
 }
 #dropData .cell.qty{
   text-align:right;
-  font-size:20px;
 }
 </style>
 </head>
@@ -170,7 +163,7 @@ button{
 
 <div class="row">
   <span>Weather Forecast</span>
-  <select id="weather">
+  <select id="weather" required>
     <option value=""></option>
     <option>Sunny</option>
     <option>Cloudy</option>
@@ -181,7 +174,7 @@ button{
 
 <div class="row">
   <span>How's today going?</span>
-  <select id="traffic">
+  <select id="traffic" required>
     <option value=""></option>
     <option>Quiet</option>
     <option>Normal</option>
@@ -189,7 +182,7 @@ button{
   </select>
 </div>
 
-<h3 style="text-align:center;">Stock Info</h3>
+<h3>Stock Info</h3>
 
 <div id="stockForm"></div>
 
@@ -223,7 +216,7 @@ function setDate(){
     });
 }
 
-/* TAB CONTROL */
+/* TAB */
 function showTab(tab){
   document.querySelectorAll(".section")
     .forEach(s => s.classList.remove("active"));
@@ -248,10 +241,7 @@ async function loadPizzas(){
   const pizzas = await res.json();
 
   const formDiv = document.getElementById("stockForm");
-  formDiv.innerHTML = ""; // limpio
-
-  // headers
-  formDiv.innerHTML += `
+  formDiv.innerHTML = `
     <span class="header">Pizza</span>
     <span class="header">Whole pies</span>
     <span class="header">Slices</span>
@@ -259,105 +249,47 @@ async function loadPizzas(){
 
   pizzas.forEach(p=>{
     formDiv.innerHTML += `
-      <span class="bold">${p}</span>
-      <input id="whole_${p}" class="whole" type="number" min="0">
-      <input id="slice_${p}" class="slice" type="number" min="0" step="0.1">
+      <span><b>${p}</b></span>
+      <input id="whole_${p}" type="number" min="0">
+      <input id="slice_${p}" type="number" min="0">
     `;
   });
-
-  const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
-  if(saved.pizzas){
-    saved.pizzas.forEach(p=>{
-      const whole = Math.floor(p.qty);
-      const slice = Math.round((p.qty - whole) * 0.8*10)/10; // reconstruimos slice
-      const elWhole = document.getElementById("whole_" + p.name);
-      const elSlice = document.getElementById("slice_" + p.name);
-      if(elWhole) elWhole.value = whole;
-      if(elSlice) elSlice.value = slice;
-    });
-    if(saved.user) document.getElementById("stockUser").value = saved.user;
-    if(saved.weather) document.getElementById("weather").value = saved.weather;
-    if(saved.traffic) document.getElementById("traffic").value = saved.traffic;
-    if(saved.timestamp) showLastUpdate(saved.timestamp);
-    document.getElementById("newBtn").classList.remove("hidden");
-
-    // BLOQUEAR inputs y botón submit
-    document.getElementById("stockUser").disabled = true;
-    document.getElementById("weather").disabled = true;
-    document.getElementById("traffic").disabled = true;
-    pizzas.forEach(p=>{
-      const elWhole = document.getElementById("whole_" + p);
-      const elSlice = document.getElementById("slice_" + p);
-      if(elWhole) elWhole.disabled = true;
-      if(elSlice) elSlice.disabled = true;
-    });
-    document.getElementById("submitStockBtn").disabled = true;
-  }
 }
 
-/* RESET FORM */
-function resetForm(){
-  document.getElementById("stockUser").value = "";
-  document.getElementById("weather").value = "";
-  document.getElementById("traffic").value = "";
-  document.querySelectorAll("[id^=whole_]").forEach(i=>{
-    i.value = "";
-    i.disabled = false;
-  });
-  document.querySelectorAll("[id^=slice_]").forEach(i=>{
-    i.value = "";
-    i.disabled = false;
-  });
-  document.getElementById("stockUser").disabled = false;
-  document.getElementById("weather").disabled = false;
-  document.getElementById("traffic").disabled = false;
-  document.getElementById("submitStockBtn").disabled = false;
-  document.getElementById("newBtn").classList.add("hidden");
-  document.getElementById("lastUpdate").classList.add("hidden");
-  localStorage.removeItem("lastStockSubmit");
-}
-
-/* BLOCK FORM */
-function blockForm(){
-  document.querySelectorAll("input, select, button")
-    .forEach(el=>{
-      if(el.classList.contains("tabBtn") || el.id === "newBtn") return;
-      el.disabled = true;
-    });
-}
-
-/* LAST UPDATE */
-function showLastUpdate(date){
-  const d = new Date(date);
-  const text = d.toLocaleDateString('en-GB') +
-    " at " + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-
-  const el = document.getElementById("lastUpdate");
-  el.innerText = "Last update at " + text;
-  el.classList.remove("hidden");
-}
-
-/* SUBMIT STOCK */
+/* VALIDACIÓN + SUBMIT */
 async function submitStock(){
-  if(!confirm("Are you sure?")) return;
-
-  blockForm();
 
   const user = document.getElementById("stockUser").value;
   const weather = document.getElementById("weather").value;
   const traffic = document.getElementById("traffic").value;
 
+  if(!user || !weather || !traffic){
+    alert("Complete all fields");
+    return;
+  }
+
   const pizzas=[];
+  let valid=true;
+
   document.querySelectorAll("[id^=whole_]").forEach(i=>{
     const name = i.id.replace("whole_","");
-    const whole = Number(i.value)||0;
-    const slice = Number(document.getElementById("slice_" + name).value)||0;
-    const total = whole + slice/0.8;
-    pizzas.push({
-      name,
-      qty: total
-    });
+    const whole = i.value;
+    const slice = document.getElementById("slice_" + name).value;
+
+    if(whole === "" || slice === ""){
+      valid=false;
+    }
+
+    const total = Number(whole) + Number(slice)/8; /* NUEVA FÓRMULA */
+    pizzas.push({name, qty: total});
   });
+
+  if(!valid){
+    alert("Fill all pizza fields");
+    return;
+  }
+
+  if(!confirm("Are you sure?")) return;
 
   const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
     user, weather, traffic, pizzas
@@ -367,28 +299,12 @@ async function submitStock(){
 
   alert("Submitted");
 
-  // Guardamos en localStorage
   localStorage.setItem("lastStockSubmit", JSON.stringify({
     user, weather, traffic, pizzas, timestamp: data.timestamp
   }));
-
-  showLastUpdate(data.timestamp);
-  document.getElementById("newBtn").classList.remove("hidden");
-
-  // BLOQUEAR inputs y botón submit
-  document.getElementById("stockUser").disabled = true;
-  document.getElementById("weather").disabled = true;
-  document.getElementById("traffic").disabled = true;
-  pizzas.forEach(p=>{
-    const elWhole = document.getElementById("whole_" + p.name);
-    const elSlice = document.getElementById("slice_" + p.name);
-    if(elWhole) elWhole.disabled = true;
-    if(elSlice) elSlice.disabled = true;
-  });
-  document.getElementById("submitStockBtn").disabled = true;
 }
 
-/* LOAD DROP */
+/* DROP */
 async function loadDrop(){
   const res = await fetch(`${URL}?action=getLastDrop`);
   const data = await res.json();

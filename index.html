@@ -12,6 +12,7 @@ body{
   padding:20px;
 }
 
+/* LOGO MÁS GRANDE */
 .logo{
   width:200px;
   margin:auto;
@@ -19,6 +20,7 @@ body{
   margin-bottom:10px;
 }
 
+/* TÍTULO EN BOLD */
 .title{
   font-size:28px; 
   font-weight:bold;
@@ -50,47 +52,44 @@ body{
   margin:0 auto;
 }
 
+/* FILAS: columna Pizza más separada, Whole y Slices juntas */
 .row{
   display:flex;
-  justify-content:space-between;
+  justify-content:flex-start;
   align-items:center;
   margin:8px 0;
+  gap:15px; /* espacio entre columnas */
 }
 
 .row span, .row b{
   display:inline-block;
-  min-width:120px;
+  min-width:200px; /* columna Pizza más separada */
   font-size:20px; 
-}
-
-.row input, .row select{
-  width:70px;
-  height:70px;
-  font-size:20px;
-  text-align:center; 
-  box-sizing:border-box;
-  border:1px solid #ccc;
-  border-radius:4px;
+  text-align:left;
 }
 
 .row input.whole{
   text-align:right;
+  width:80px;
 }
 
 .row input.slice{
   text-align:center;
+  width:80px;
 }
 
+/* DROPDOWNS MÁS ANCHOS */
+.row select{
+  width:600px; /* 3 veces más largo */
+  font-size:20px;
+}
+
+/* Inputs grandes */
 .bigInput{
   font-size:22px;
   width:220px;
   text-align:center;
   margin:20px auto 15px;
-}
-
-select{
-  width:600px; 
-  font-size:48px;
 }
 
 button{
@@ -122,7 +121,7 @@ button{
 
 #dropData .header{
   font-weight:bold;
-  font-size:22px; 
+  font-size:22px; /* más grande que antes */
 }
 
 #dropData .cell{
@@ -197,6 +196,7 @@ button{
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbzCkV1ETniuZLTvxvV4IJNJ2hoRBs_0qyTOCtyhxMS4QHAxDDGVdl8O3JCSnGOj0G8a/exec";
 
+/* DATE */
 function setDate(){
   const today = new Date();
   document.getElementById("todayDate").innerText =
@@ -207,6 +207,7 @@ function setDate(){
     });
 }
 
+/* TAB CONTROL */
 function showTab(tab){
   document.querySelectorAll(".section")
     .forEach(s => s.classList.remove("active"));
@@ -225,12 +226,13 @@ function showTab(tab){
   }
 }
 
+/* LOAD PIZZAS */
 async function loadPizzas(){
   const res = await fetch(`${URL}?action=getPizzas`);
   const pizzas = await res.json();
 
   const formDiv = document.getElementById("stockForm");
-  formDiv.innerHTML = ""; 
+  formDiv.innerHTML = ""; // limpio
 
   // headers
   formDiv.innerHTML += `
@@ -255,7 +257,7 @@ async function loadPizzas(){
   if(saved.pizzas){
     saved.pizzas.forEach(p=>{
       const whole = Math.floor(p.qty);
-      const slice = Math.round((p.qty - whole) * 0.8*10)/10;
+      const slice = Math.round((p.qty - whole) * 0.8*10)/10; // reconstruimos slice
       const elWhole = document.getElementById("whole_" + p.name);
       const elSlice = document.getElementById("slice_" + p.name);
       if(elWhole) elWhole.value = whole;
@@ -267,6 +269,7 @@ async function loadPizzas(){
     if(saved.timestamp) showLastUpdate(saved.timestamp);
     document.getElementById("newBtn").classList.remove("hidden");
 
+    // BLOQUEAR inputs y botón submit
     document.getElementById("stockUser").disabled = true;
     document.getElementById("weather").disabled = true;
     document.getElementById("traffic").disabled = true;
@@ -280,6 +283,7 @@ async function loadPizzas(){
   }
 }
 
+/* RESET FORM */
 function resetForm(){
   document.getElementById("stockUser").value = "";
   document.getElementById("weather").value = "";
@@ -301,6 +305,7 @@ function resetForm(){
   localStorage.removeItem("lastStockSubmit");
 }
 
+/* BLOCK FORM */
 function blockForm(){
   document.querySelectorAll("input, select, button")
     .forEach(el=>{
@@ -309,6 +314,7 @@ function blockForm(){
     });
 }
 
+/* LAST UPDATE */
 function showLastUpdate(date){
   const d = new Date(date);
   const text = d.toLocaleDateString('en-GB') +
@@ -319,6 +325,7 @@ function showLastUpdate(date){
   el.classList.remove("hidden");
 }
 
+/* SUBMIT STOCK */
 async function submitStock(){
   if(!confirm("Are you sure?")) return;
 
@@ -334,7 +341,10 @@ async function submitStock(){
     const whole = Number(i.value)||0;
     const slice = Number(document.getElementById("slice_" + name).value)||0;
     const total = whole + slice/0.8;
-    pizzas.push({name, qty: total});
+    pizzas.push({
+      name,
+      qty: total
+    });
   });
 
   const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
@@ -342,8 +352,10 @@ async function submitStock(){
   }))}`);
 
   const data = await res.json();
+
   alert("Submitted");
 
+  // Guardamos en localStorage
   localStorage.setItem("lastStockSubmit", JSON.stringify({
     user, weather, traffic, pizzas, timestamp: data.timestamp
   }));
@@ -351,6 +363,7 @@ async function submitStock(){
   showLastUpdate(data.timestamp);
   document.getElementById("newBtn").classList.remove("hidden");
 
+  // BLOQUEAR inputs y botón submit
   document.getElementById("stockUser").disabled = true;
   document.getElementById("weather").disabled = true;
   document.getElementById("traffic").disabled = true;
@@ -363,6 +376,7 @@ async function submitStock(){
   document.getElementById("submitStockBtn").disabled = true;
 }
 
+/* LOAD DROP */
 async function loadDrop(){
   const res = await fetch(`${URL}?action=getLastDrop`);
   const data = await res.json();

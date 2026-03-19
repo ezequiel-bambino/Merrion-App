@@ -19,7 +19,7 @@ body{
 }
 
 .title{
-  font-size:28px; /* un toque más grande */
+  font-size:28px; 
   margin-top:10px;
 }
 
@@ -32,7 +32,7 @@ body{
 .tabBtn{
   padding:15px 25px;
   margin:5px;
-  font-size:22px; /* agrandados */
+  font-size:22px; 
 }
 
 .section{
@@ -59,13 +59,13 @@ body{
   display:inline-block;
   min-width:150px;
   text-align:left;
-  font-size:20px; /* letras más grandes en Stock Form */
+  font-size:20px;
 }
 
 .row input, .row select{
   width:80px;
   font-size:20px;
-  text-align:center; /* centralizado dentro del input */
+  text-align:center; 
 }
 
 .bigInput{
@@ -92,17 +92,26 @@ button{
   margin-top:10px;
 }
 
-/* Last Drop ajustes: columnas centradas y más cerca */
+/* Last Drop: usamos grid para alinear columnas como tabla */
 #dropData{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+  display:grid;
+  grid-template-columns: auto 60px; /* pizza | qty */
+  justify-content:center;
+  gap:20px;
+  row-gap:6px;
+  margin-top:10px;
 }
 
-#dropData .row{
-  justify-content:flex-start; /* para que las columnas no estén en extremos */
-  width:auto;
-  gap:50px; /* separación entre Pizza y QTY */
+#dropData .header{
+  font-weight:bold;
+  font-size:20px;
+}
+
+#dropData .cell{
+  text-align:left;
+}
+#dropData .cell.qty{
+  text-align:right;
 }
 </style>
 </head>
@@ -159,11 +168,10 @@ button{
 <!-- DROP -->
 <div id="drop" class="section">
   <h3>Last Drop Info</h3>
-  <div class="row bold" style="justify-content:flex-start; gap:50px;">
-    <span>Pizza</span>
-    <span>QTY</span>
+  <div id="dropData">
+    <div class="header cell">Pizza</div>
+    <div class="header cell qty">QTY</div>
   </div>
-  <div id="dropData"></div>
 </div>
 
 <script>
@@ -216,7 +224,6 @@ async function loadPizzas(){
     `;
   });
 
-  // Si hay datos guardados, cargar en los inputs y bloquear
   const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
   if(saved.pizzas){
     saved.pizzas.forEach(p=>{
@@ -229,7 +236,7 @@ async function loadPizzas(){
     if(saved.timestamp) showLastUpdate(saved.timestamp);
     document.getElementById("newBtn").classList.remove("hidden");
 
-    // BLOQUEAMOS inputs, selects y botón submit
+    // bloqueamos inputs y botón submit
     document.getElementById("stockUser").disabled = true;
     document.getElementById("weather").disabled = true;
     document.getElementById("traffic").disabled = true;
@@ -239,6 +246,25 @@ async function loadPizzas(){
     });
     document.getElementById("submitStockBtn").disabled = true;
   }
+}
+
+/* RESET: limpiar formulario sin recargar toda la app */
+function resetForm(){
+  document.getElementById("stockUser").value = "";
+  document.getElementById("weather").value = "";
+  document.getElementById("traffic").value = "";
+  document.querySelectorAll("[id^=stock_]").forEach(i=>{
+    i.value = "";
+    i.disabled = false;
+  });
+  document.getElementById("stockUser").disabled = false;
+  document.getElementById("weather").disabled = false;
+  document.getElementById("traffic").disabled = false;
+  document.getElementById("submitStockBtn").disabled = false;
+  document.getElementById("newBtn").classList.add("hidden");
+  document.getElementById("lastUpdate").classList.add("hidden");
+
+  localStorage.removeItem("lastStockSubmit");
 }
 
 /* BLOCK FORM */
@@ -259,12 +285,6 @@ function showLastUpdate(date){
   const el = document.getElementById("lastUpdate");
   el.innerText = "Last update at " + text;
   el.classList.remove("hidden");
-}
-
-/* RESET */
-function resetForm(){
-  localStorage.removeItem("lastStockSubmit");
-  location.reload();
 }
 
 /* SUBMIT STOCK */
@@ -301,7 +321,7 @@ async function submitStock(){
   showLastUpdate(data.timestamp);
   document.getElementById("newBtn").classList.remove("hidden");
 
-  // BLOQUEAMOS inputs y botón submit
+  // BLOQUEAR inputs y botón submit
   document.getElementById("stockUser").disabled = true;
   document.getElementById("weather").disabled = true;
   document.getElementById("traffic").disabled = true;
@@ -318,14 +338,15 @@ async function loadDrop(){
   const data = await res.json();
 
   const div = document.getElementById("dropData");
-  div.innerHTML="";
+  div.innerHTML = `
+    <div class="header cell">Pizza</div>
+    <div class="header cell qty">QTY</div>
+  `;
 
   data.forEach(d=>{
     div.innerHTML += `
-      <div class="row">
-        <span>${d.pizza}</span>
-        <b>${d.lastDrop}</b>
-      </div>
+      <div class="cell">${d.pizza}</div>
+      <div class="cell qty">${d.lastDrop}</div>
     `;
   });
 }

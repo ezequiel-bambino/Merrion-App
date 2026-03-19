@@ -19,7 +19,7 @@ body{
 }
 
 .title{
-  font-size:26px;
+  font-size:28px; /* un toque más grande */
   margin-top:10px;
 }
 
@@ -32,7 +32,7 @@ body{
 .tabBtn{
   padding:15px 25px;
   margin:5px;
-  font-size:20px; /* agrandados */
+  font-size:22px; /* agrandados */
 }
 
 .section{
@@ -52,30 +52,32 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin:6px 0;
+  margin:8px 0;
 }
 
 .row span, .row b{
   display:inline-block;
   min-width:150px;
   text-align:left;
+  font-size:20px; /* letras más grandes en Stock Form */
 }
 
-.row input{
-  width:60px;
-  text-align:right;
+.row input, .row select{
+  width:80px;
+  font-size:20px;
+  text-align:center; /* centralizado dentro del input */
 }
 
 .bigInput{
-  font-size:20px;
-  width:200px;
+  font-size:22px;
+  width:220px;
   text-align:center;
   margin:20px auto 15px;
 }
 
 button{
   margin-top:20px;
-  font-size:20px;
+  font-size:22px;
 }
 
 .hidden{
@@ -88,6 +90,19 @@ button{
 
 #lastUpdate{
   margin-top:10px;
+}
+
+/* Last Drop ajustes: columnas centradas y más cerca */
+#dropData{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+#dropData .row{
+  justify-content:flex-start; /* para que las columnas no estén en extremos */
+  width:auto;
+  gap:50px; /* separación entre Pizza y QTY */
 }
 </style>
 </head>
@@ -144,7 +159,7 @@ button{
 <!-- DROP -->
 <div id="drop" class="section">
   <h3>Last Drop Info</h3>
-  <div class="row bold">
+  <div class="row bold" style="justify-content:flex-start; gap:50px;">
     <span>Pizza</span>
     <span>QTY</span>
   </div>
@@ -201,7 +216,7 @@ async function loadPizzas(){
     `;
   });
 
-  // Si hay datos guardados, cargar en los inputs
+  // Si hay datos guardados, cargar en los inputs y bloquear
   const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
   if(saved.pizzas){
     saved.pizzas.forEach(p=>{
@@ -213,6 +228,16 @@ async function loadPizzas(){
     if(saved.traffic) document.getElementById("traffic").value = saved.traffic;
     if(saved.timestamp) showLastUpdate(saved.timestamp);
     document.getElementById("newBtn").classList.remove("hidden");
+
+    // BLOQUEAMOS inputs, selects y botón submit
+    document.getElementById("stockUser").disabled = true;
+    document.getElementById("weather").disabled = true;
+    document.getElementById("traffic").disabled = true;
+    pizzas.forEach(p=>{
+      const el = document.getElementById("stock_" + p);
+      if(el) el.disabled = true;
+    });
+    document.getElementById("submitStockBtn").disabled = true;
   }
 }
 
@@ -275,6 +300,16 @@ async function submitStock(){
 
   showLastUpdate(data.timestamp);
   document.getElementById("newBtn").classList.remove("hidden");
+
+  // BLOQUEAMOS inputs y botón submit
+  document.getElementById("stockUser").disabled = true;
+  document.getElementById("weather").disabled = true;
+  document.getElementById("traffic").disabled = true;
+  pizzas.forEach(p=>{
+    const el = document.getElementById("stock_" + p.name);
+    if(el) el.disabled = true;
+  });
+  document.getElementById("submitStockBtn").disabled = true;
 }
 
 /* LOAD DROP */

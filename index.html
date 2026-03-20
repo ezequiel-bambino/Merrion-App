@@ -6,7 +6,6 @@
 <title>Merrion Shop</title>
 
 <style>
-/* ... todo tu CSS original permanece igual ... */
 body{
   font-family:Arial;
   text-align:center;
@@ -139,6 +138,35 @@ button{
   text-align:right;
   font-size:20px;
 }
+
+/* CLOSING FORM TABLE */
+#closingForm {
+  display:grid;
+  grid-template-columns: 1fr 100px 100px 100px; /* pizza | waste pies | waste slices | sellout time */
+  gap:12px 20px;
+  align-items:center;
+}
+
+#closingForm span.bold {
+  text-align:left;
+  font-size:20px;
+}
+
+#closingForm input {
+  font-size:20px;
+  padding:6px;
+  width:80px;
+  text-align:center;
+  box-sizing:border-box;
+  margin:auto;
+}
+
+#closingForm .header{
+  font-weight:bold;
+  font-size:22px;
+  text-align:left;
+  padding-bottom:6px;
+}
 </style>
 </head>
 
@@ -151,6 +179,7 @@ button{
 
 <button class="tabBtn" onclick="showTab('stock')">Stock Form</button>
 <button class="tabBtn" onclick="showTab('drop')">Last Drop</button>
+<button class="tabBtn" onclick="showTab('closing')">Closing Form</button>
 
 <!-- STOCK -->
 <div id="stock" class="section">
@@ -200,10 +229,28 @@ button{
   </div>
 </div>
 
-<script>
-const URL = "https://script.google.com/macros/s/AKfycbzfGVh74Wdw8tKgKB5I7n3STYcR4GERrZ3tRBRNVWDsEjm9-JM1vU-8M6nWI-W2hfEK/exec"; // ⚠️ Cambia a tu Web App deployeado
+<!-- CLOSING FORM -->
+<div id="closing" class="section">
 
-/* DATE */
+  <input id="closingUser" class="bigInput" placeholder="Your name">
+
+  <div class="left">
+    <h3 style="text-align:center;">Closing Info</h3>
+
+    <div id="closingForm"></div>
+
+    <button id="submitClosingBtn" onclick="submitClosing()">Submit Log</button>
+    <button id="newClosingBtn" class="hidden" onclick="resetClosingForm()">New Submit</button>
+    <div id="lastClosingUpdate" class="hidden"></div>
+  </div>
+</div>
+
+<script>
+const URL = "https://script.google.com/macros/s/AKfycby2Tz7rFagfnPhr7wXRnSPjJyXiitZwYlhLlvm_YqRGdI8ept-6CXHXqGzQ5IERmFAh/exec"; // ⚠️ Cambia a tu Web App deployeado
+
+/* ===============================
+   DATE
+=============================== */
 function setDate(){
   const today = new Date();
   document.getElementById("todayDate").innerText =
@@ -214,26 +261,32 @@ function setDate(){
     });
 }
 
-/* TAB CONTROL */
+/* ===============================
+   TAB CONTROL
+=============================== */
 function showTab(tab){
-  document.querySelectorAll(".section")
-    .forEach(s => s.classList.remove("active"));
-
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.getElementById(tab).classList.add("active");
 
-  if(tab === "stock"){
-    if(!window.loaded){
-      loadPizzas();
-      window.loaded = true;
-    }
+  if(tab === "stock" && !window.loaded){
+    loadPizzas();
+    window.loaded = true;
   }
 
   if(tab === "drop"){
     loadDrop();
   }
+
+  if(tab === "closing" && !window.closingLoaded){
+    loadClosing();
+    window.closingLoaded = true;
+  }
 }
 
-/* LOAD PIZZAS */
+/* ===============================
+   STOCK FORM FUNCTIONS
+=============================== */
+
 async function loadPizzas(){
   const res = await fetch(`${URL}?action=getPizzas`);
   const pizzas = await res.json();
@@ -282,9 +335,7 @@ async function loadPizzas(){
   }
 }
 
-/* VALIDACIÓN + SUBMIT */
 async function submitStock(){
-
   const user = document.getElementById("stockUser").value.trim();
   const weather = document.getElementById("weather").value;
   const traffic = document.getElementById("traffic").value;
@@ -298,16 +349,10 @@ async function submitStock(){
 
   document.querySelectorAll("[id^=whole_]").forEach(i=>{
     const slice = document.getElementById("slice_" + i.id.replace("whole_",""));
-    if(i.value === "" || slice.value === ""){
-      valid = false;
-    }
+    if(i.value === "" || slice.value === "") valid=false;
   });
 
-  if(!valid){
-    alert("Fill all pizza fields");
-    return;
-  }
-
+  if(!valid){ alert("Fill all pizza fields"); return; }
   if(!confirm("Are you sure?")) return;
 
   blockForm();
@@ -324,7 +369,6 @@ async function submitStock(){
   const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
     user, weather, traffic, pizzas
   }))}`);
-
   const data = await res.json();
 
   alert("Submitted");
@@ -347,39 +391,30 @@ async function submitStock(){
 }
 
 function resetForm(){
-  document.getElementById("stockUser").value = "";
-  document.getElementById("weather").value = "";
-  document.getElementById("traffic").value = "";
-  document.querySelectorAll("[id^=whole_]").forEach(i=>{
-    i.value = "";
-    i.disabled = false;
-  });
-  document.querySelectorAll("[id^=slice_]").forEach(i=>{
-    i.value = "";
-    i.disabled = false;
-  });
-  document.getElementById("stockUser").disabled = false;
-  document.getElementById("weather").disabled = false;
-  document.getElementById("traffic").disabled = false;
-  document.getElementById("submitStockBtn").disabled = false;
+  document.getElementById("stockUser").value="";
+  document.getElementById("weather").value="";
+  document.getElementById("traffic").value="";
+  document.querySelectorAll("[id^=whole_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.querySelectorAll("[id^=slice_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.getElementById("stockUser").disabled=false;
+  document.getElementById("weather").disabled=false;
+  document.getElementById("traffic").disabled=false;
+  document.getElementById("submitStockBtn").disabled=false;
   document.getElementById("newBtn").classList.add("hidden");
   document.getElementById("lastUpdate").classList.add("hidden");
   localStorage.removeItem("lastStockSubmit");
 }
 
 function blockForm(){
-  document.querySelectorAll("input, select, button")
-    .forEach(el=>{
-      if(el.classList.contains("tabBtn") || el.id === "newBtn") return;
-      el.disabled = true;
-    });
+  document.querySelectorAll("input, select, button").forEach(el=>{
+    if(el.classList.contains("tabBtn") || el.id==="newBtn") return;
+    el.disabled=true;
+  });
 }
 
 function showLastUpdate(date){
   const d = new Date(date);
-  const text = d.toLocaleDateString('en-GB') +
-    " at " + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-
+  const text = d.toLocaleDateString('en-GB') + " at " + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   const el = document.getElementById("lastUpdate");
   el.innerText = "Last update at " + text;
   el.classList.remove("hidden");
@@ -388,19 +423,113 @@ function showLastUpdate(date){
 async function loadDrop(){
   const res = await fetch(`${URL}?action=getLastDrop`);
   const data = await res.json();
-
   const div = document.getElementById("dropData");
-  div.innerHTML = `
-    <div class="header cell">Pizza</div>
-    <div class="header cell qty">QTY</div>
+  div.innerHTML = `<div class="header cell">Pizza</div><div class="header cell qty">QTY</div>`;
+  data.forEach(d=>{
+    div.innerHTML += `<div class="cell">${d.pizza}</div><div class="cell qty">${d.lastDrop}</div>`;
+  });
+}
+
+/* ===============================
+   CLOSING FORM FUNCTIONS
+=============================== */
+
+async function loadClosing(){
+  const res = await fetch(`${URL}?action=getPizzas`);
+  const pizzas = await res.json();
+  const formDiv = document.getElementById("closingForm");
+  formDiv.innerHTML="";
+
+  formDiv.innerHTML += `
+    <span class="header">Pizza</span>
+    <span class="header">Waste pies</span>
+    <span class="header">Waste slices</span>
+    <span class="header">Sellout time</span>
   `;
 
-  data.forEach(d=>{
-    div.innerHTML += `
-      <div class="cell">${d.pizza}</div>
-      <div class="cell qty">${d.lastDrop}</div>
+  pizzas.forEach(p=>{
+    formDiv.innerHTML += `
+      <span class="bold">${p}</span>
+      <input id="wasteWhole_${p}" class="whole" type="number" min="0">
+      <input id="wasteSlice_${p}" class="slice" type="number" min="0" step="1">
+      <input id="sellout_${p}" class="sellout" type="time">
     `;
   });
+
+  const saved = JSON.parse(localStorage.getItem("lastClosingSubmit") || "{}");
+  if(saved.pizzas){
+    saved.pizzas.forEach(p=>{
+      const elWhole = document.getElementById("wasteWhole_"+p.name);
+      const elSlice = document.getElementById("wasteSlice_"+p.name);
+      const elTime = document.getElementById("sellout_"+p.name);
+      if(elWhole) elWhole.value = Math.floor(p.waste);
+      if(elSlice) elSlice.value = Math.round((p.waste-Math.floor(p.waste))*8);
+      if(elTime) elTime.value = p.selloutTime;
+    });
+    if(saved.user) document.getElementById("closingUser").value = saved.user;
+    if(saved.timestamp) showLastClosingUpdate(saved.timestamp);
+    document.getElementById("newClosingBtn").classList.remove("hidden");
+    blockClosingFormInputs();
+  }
+}
+
+async function submitClosing(){
+  const user = document.getElementById("closingUser").value.trim();
+  if(!user){ alert("Please enter your name"); return; }
+
+  let valid=true;
+  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{
+    const name=i.id.replace("wasteWhole_","");
+    const slice=document.getElementById("wasteSlice_"+name);
+    const time=document.getElementById("sellout_"+name);
+    if(i.value==="" || slice.value==="" || !time.value) valid=false;
+  });
+  if(!valid){ alert("Fill all fields for each pizza"); return; }
+  if(!confirm("Are you sure?")) return;
+
+  blockClosingFormInputs();
+
+  const pizzas=[];
+  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{
+    const name=i.id.replace("wasteWhole_","");
+    const whole=Number(i.value)||0;
+    const slice=Number(document.getElementById("wasteSlice_"+name).value)||0;
+    const selloutTime=document.getElementById("sellout_"+name).value;
+    const wasteTotal=whole + (slice/8);
+    pizzas.push({name, waste:wasteTotal, selloutTime});
+  });
+
+  const res = await fetch(`${URL}?action=submitClosing&data=${encodeURIComponent(JSON.stringify({user,pizzas}))}`);
+  const data = await res.json();
+  localStorage.setItem("lastClosingSubmit", JSON.stringify({user,pizzas,timestamp:data.timestamp}));
+
+  showLastClosingUpdate(data.timestamp);
+  document.getElementById("newClosingBtn").classList.remove("hidden");
+  alert("Closing log submitted");
+}
+
+function resetClosingForm(){
+  document.getElementById("closingUser").value="";
+  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.querySelectorAll("[id^=wasteSlice_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.querySelectorAll("[id^=sellout_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.getElementById("closingUser").disabled=false;
+  document.getElementById("newClosingBtn").classList.add("hidden");
+  document.getElementById("lastClosingUpdate").classList.add("hidden");
+  localStorage.removeItem("lastClosingSubmit");
+}
+
+function blockClosingFormInputs(){
+  document.getElementById("closingUser").disabled=true;
+  document.querySelectorAll("#closingForm input").forEach(i=>i.disabled=true);
+}
+
+function showLastClosingUpdate(date){
+  const d=new Date(date);
+  const text=d.toLocaleDateString('en-GB')+" at "+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const el=document.getElementById("lastClosingUpdate");
+  el.innerText="Last update at "+text;
+  el.classList.remove("hidden");
 }
 
 setDate();

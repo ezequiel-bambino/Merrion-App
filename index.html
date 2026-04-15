@@ -2,160 +2,538 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Merrion Shop</title>
 
 <style>
-body{font-family:Arial;text-align:center;padding:20px;}
-.logo{width:200px;margin:auto;display:block;margin-bottom:10px;}
-.title{font-size:28px;font-weight:bold;margin-top:10px;}
-.date{font-size:14px;color:#777;margin-bottom:15px;}
-.tabBtn{padding:15px 25px;margin:5px;font-size:22px;}
-.section{display:none;}
-.active{display:block;}
-.left{max-width:500px;margin:0 auto;}
-.row{margin:16px 0;}
-.row select{width:300px;font-size:20px;display:block;margin:0 auto;text-align:center;text-align-last:center;}
-#stockForm,#closingForm{display:grid;gap:12px 20px;align-items:center;}
-#stockForm{grid-template-columns:1fr 100px 100px;}
-#closingForm{grid-template-columns:1fr 100px 100px 120px;}
-.header{font-weight:bold;font-size:22px;text-align:left;}
-.bold{font-weight:bold;}
-input{font-size:20px;padding:6px;width:80px;text-align:center;box-sizing:border-box;margin:auto;}
-.bigInput{font-size:22px;width:220px;text-align:center;margin:20px auto 15px;}
-button{margin-top:20px;font-size:22px;}
-.hidden{display:none;}
-#dropData{display:grid;grid-template-columns:auto 60px;justify-content:center;gap:20px;row-gap:6px;margin-top:10px;}
-#dropData .header{font-weight:bold;font-size:22px;}
-#dropData .qty{text-align:right;}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;}
-.modal-box{background:#fff;padding:20px;border-radius:10px;width:300px;}
-.spinner{border:4px solid #ddd;border-top:4px solid #333;border-radius:50%;width:20px;height:20px;animation:spin 1s linear infinite;display:inline-block;margin-left:10px;}
-@keyframes spin{100%{transform:rotate(360deg);}}
+body{
+  font-family:Arial;
+  text-align:center;
+  padding:20px;
+}
+
+.logo{
+  width:200px;
+  margin:auto;
+  display:block;
+  margin-bottom:10px;
+}
+
+.title{
+  font-size:28px; 
+  font-weight:bold;
+  margin-top:10px;
+}
+
+.date{
+  font-size:14px;
+  color:#777;
+  margin-bottom:15px;
+}
+
+.tabBtn{
+  padding:15px 25px;
+  margin:5px;
+  font-size:22px; 
+}
+
+.section{
+  display:none;
+}
+
+.active{
+  display:block;
+}
+
+.left{
+  max-width:500px;
+  margin:0 auto;
+}
+
+.row{
+  margin:16px 0;
+}
+
+.row select{
+  width:300px;
+  font-size:20px;
+  display:block;
+  margin:0 auto;
+  text-align:center;
+  text-align-last:center;
+}
+
+#stockForm{
+  display:grid;
+  grid-template-columns: 1fr 100px 100px;
+  gap:12px 20px;
+  align-items:center;
+}
+
+#stockForm span.bold{
+  text-align:left;
+  font-size:20px;
+}
+
+#stockForm input.whole, 
+#stockForm input.slice{
+  font-size:20px;
+  padding:6px;
+  width:80px;
+  text-align:center;
+  box-sizing:border-box;
+  margin:auto;
+}
+
+#stockForm .header{
+  font-weight:bold;
+  font-size:22px;
+  text-align:left;
+  padding-bottom:6px;
+}
+
+.bigInput{
+  font-size:22px;
+  width:220px;
+  text-align:center;
+  margin:20px auto 15px;
+}
+
+button{
+  margin-top:20px;
+  font-size:22px;
+}
+
+.hidden{
+  display:none;
+}
+
+.bold{
+  font-weight:bold;
+}
+
+#lastUpdate{
+  margin-top:10px;
+}
+
+#dropData{
+  display:grid;
+  grid-template-columns: auto 60px;
+  justify-content:center;
+  gap:20px;
+  row-gap:6px;
+  margin-top:10px;
+}
+
+#dropData .header{
+  font-weight:bold;
+  font-size:22px;
+}
+
+#dropData .cell{
+  text-align:left;
+  font-size:20px;
+}
+#dropData .cell.qty{
+  text-align:right;
+  font-size:20px;
+}
+
+/* CLOSING FORM TABLE */
+#closingForm {
+  display:grid;
+  grid-template-columns: 1fr 100px 100px 100px; /* pizza | waste pies | waste slices | sellout time */
+  gap:12px 20px;
+  align-items:center;
+}
+
+#closingForm span.bold {
+  text-align:left;
+  font-size:20px;
+}
+
+#closingForm input {
+  font-size:20px;
+  padding:6px;
+  width:80px;
+  text-align:center;
+  box-sizing:border-box;
+  margin:auto;
+}
+
+#closingForm .header{
+  font-weight:bold;
+  font-size:22px;
+  text-align:left;
+  padding-bottom:6px;
+}
 </style>
 </head>
 
 <body>
+
 <img src="icon.png" class="logo">
+
 <div class="title">MERRION SHOP</div>
 <div id="todayDate" class="date"></div>
 
-<button class="tabBtn" onclick="UI.showTab('stock')">Stock Form</button>
-<button class="tabBtn" onclick="UI.showTab('drop')">Last Drop</button>
-<button class="tabBtn" onclick="UI.showTab('closing')">Closing Form</button>
+<button class="tabBtn" onclick="showTab('stock')">Stock Form</button>
+<button class="tabBtn" onclick="showTab('drop')">Last Drop</button>
+<button class="tabBtn" onclick="showTab('closing')">Closing Form</button>
 
+<!-- STOCK -->
 <div id="stock" class="section">
-<input id="stockUser" class="bigInput" placeholder="Your name">
-<div class="left">
-<div class="row"><span>Weather</span><select id="weather"><option></option><option>Sunny</option><option>Cloudy</option><option>Rainy</option><option>Storm</option></select></div>
-<div class="row"><span>Traffic</span><select id="traffic"><option></option><option>Quiet</option><option>Normal</option><option>Busy</option></select></div>
-<h3>Stock Info</h3>
-<div id="stockForm"></div>
-<button id="submitStockBtn" onclick="Stock.submit()">Submit Stock</button>
-<button id="newStockBtn" class="hidden" onclick="Stock.reset(true)">New Submit</button>
-<div id="stockStatus"></div>
-</div></div>
 
-<div id="drop" class="section">
-<h3>Last Drop Info</h3>
-<div id="dropData"></div>
+<input id="stockUser" class="bigInput" placeholder="Your name">
+
+<div class="left">
+
+<div class="row">
+  <span>Weather Forecast</span>
+  <select id="weather">
+    <option value=""></option>
+    <option>Sunny</option>
+    <option>Cloudy</option>
+    <option>Rainy</option>
+    <option>Storm</option>
+  </select>
 </div>
 
-<div id="closing" class="section">
-<input id="closingUser" class="bigInput" placeholder="Your name">
-<div class="left">
-<h3>Closing Info</h3>
-<div id="closingForm"></div>
-<button id="submitClosingBtn" onclick="Closing.submit()">Submit Log</button>
-<button id="newClosingBtn" class="hidden" onclick="Closing.reset(true)">New Submit</button>
-<div id="closingStatus"></div>
-</div></div>
+<div class="row">
+  <span>How's today going?</span>
+  <select id="traffic">
+    <option value=""></option>
+    <option>Quiet</option>
+    <option>Normal</option>
+    <option>Busy</option>
+  </select>
+</div>
 
-<div id="modal" class="modal"><div class="modal-box"><p id="modalText"></p><button onclick="UI.closeModal()">OK</button></div></div>
+<h3 style="text-align:center;">Stock Info</h3>
+
+<div id="stockForm"></div>
+
+<button id="submitStockBtn" onclick="submitStock()">Submit Stock</button>
+<button id="newBtn" class="hidden" onclick="resetForm()">New Submit</button>
+<div id="lastUpdate" class="hidden"></div>
+
+</div>
+</div>
+
+<!-- DROP -->
+<div id="drop" class="section">
+  <h3>Last Drop Info</h3>
+  <div id="dropData">
+    <div class="header cell">Pizza</div>
+    <div class="header cell qty">QTY</div>
+  </div>
+</div>
+
+<!-- CLOSING FORM -->
+<div id="closing" class="section">
+
+  <input id="closingUser" class="bigInput" placeholder="Your name">
+
+  <div class="left">
+    <h3 style="text-align:center;">Closing Info</h3>
+
+    <div id="closingForm"></div>
+
+    <button id="submitClosingBtn" onclick="submitClosing()">Submit Log</button>
+    <button id="newClosingBtn" class="hidden" onclick="resetClosingForm()">New Submit</button>
+    <div id="lastClosingUpdate" class="hidden"></div>
+  </div>
+</div>
 
 <script>
-const URL="https://script.google.com/macros/s/AKfycby2Tz7rFagfnPhr7wXRnSPjJyXiitZwYlhLlvm_YqRGdI8ept-6CXHXqGzQ5IERmFAh/exec";
+const URL = "https://script.google.com/macros/s/AKfycby2Tz7rFagfnPhr7wXRnSPjJyXiitZwYlhLlvm_YqRGdI8ept-6CXHXqGzQ5IERmFAh/exec"; // ⚠️ Cambia a tu Web App deployeado
 
-const State={stock:"editing",closing:"editing"};
+/* ===============================
+   DATE
+=============================== */
+function setDate(){
+  const today = new Date();
+  document.getElementById("todayDate").innerText =
+    today.toLocaleDateString('en-GB',{
+      weekday:'long',
+      day:'numeric',
+      month:'long'
+    });
+}
 
-const UI={
-showTab(tab){
-document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-document.getElementById(tab).classList.add('active');
-if(tab==='stock'&&!window.stockLoaded)Stock.load();
-if(tab==='drop')Drop.load();
-if(tab==='closing'&&!window.closingLoaded)Closing.load();
-},
-modal(msg){document.getElementById('modalText').innerText=msg;document.getElementById('modal').style.display='flex';},
-closeModal(){document.getElementById('modal').style.display='none';}
-};
+/* ===============================
+   TAB CONTROL
+=============================== */
+function showTab(tab){
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById(tab).classList.add("active");
 
-function setLoading(btn,loading){btn.disabled=loading;btn.innerHTML=loading?"Saving...":btn.dataset.label;}
+  if(tab === "stock" && !window.loaded){
+    loadPizzas();
+    window.loaded = true;
+  }
 
-function saveState(key,data){localStorage.setItem(key,JSON.stringify(data));}
-function loadState(key){return JSON.parse(localStorage.getItem(key)||"{}");}
+  if(tab === "drop"){
+    loadDrop();
+  }
 
-const Stock={
-async load(){
-const res=await fetch(`${URL}?action=getPizzas`);
-const pizzas=await res.json();
-const form=document.getElementById('stockForm');
-form.innerHTML="<div class='header'>Pizza</div><div class='header'>Whole</div><div class='header'>Slices</div>";
-pizzas.forEach(p=>form.innerHTML+=`<span class='bold'>${p}</span><input id='w_${p}'><input id='s_${p}'>`);
-window.stockLoaded=true;
-this.restore();
-},
-restore(){const s=loadState('stock');if(!s.user)return;
-document.getElementById('stockUser').value=s.user||'';
-document.getElementById('weather').value=s.weather||'';
-document.getElementById('traffic').value=s.traffic||'';
-if(s.pizzas){s.pizzas.forEach(p=>{const w=document.getElementById('w_'+p.name);const sl=document.getElementById('s_'+p.name);if(w)w.value=p.w;if(sl)sl.value=p.s;});}
-},
-async submit(){if(State.stock!=='editing')return;
-const btn=document.getElementById('submitStockBtn');btn.dataset.label=btn.innerText;setLoading(btn,true);
-const user=document.getElementById('stockUser').value;
-const weather=document.getElementById('weather').value;
-const traffic=document.getElementById('traffic').value;
-if(!user||!weather||!traffic){UI.modal('Fill all fields');setLoading(btn,false);return;}
-if(!confirm('Confirm submit?')){setLoading(btn,false);return;}
-const pizzas=[];
-document.querySelectorAll('[id^=w_]').forEach(i=>{
-const n=i.id.replace('w_','');pizzas.push({name:n,w:Number(i.value||0),s:Number(document.getElementById('s_'+n).value||0)});
-});
-const res=await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({user,weather,traffic,pizzas}))}`);
-const d=await res.json();
-State.stock='submitted';
-saveState('stock',{user,weather,traffic,pizzas});
-document.getElementById('stockStatus').innerText='Saved '+new Date(d.timestamp).toLocaleString();setLoading(btn,false);
-},
-reset(full){localStorage.removeItem('stock');if(full)location.reload();}
-};
+  if(tab === "closing" && !window.closingLoaded){
+    loadClosing();
+    window.closingLoaded = true;
+  }
+}
 
-const Closing={
-async load(){const res=await fetch(`${URL}?action=getPizzas`);const pizzas=await res.json();const f=document.getElementById('closingForm');f.innerHTML="<div class='header'>Pizza</div><div class='header'>Waste Pies</div><div class='header'>Waste Slices</div><div class='header'>Time</div>";
-pizzas.forEach(p=>f.innerHTML+=`<span class='bold'>${p}</span><input id='cw_${p}'><input id='cs_${p}'><input type='time' id='ct_${p}'>`);
-window.closingLoaded=true;this.restore();},
-restore(){const s=loadState('closing');if(!s.user)return;
-document.getElementById('closingUser').value=s.user||'';
-if(s.pizzas){s.pizzas.forEach(p=>{const w=document.getElementById('cw_'+p.name);const s2=document.getElementById('cs_'+p.name);const t=document.getElementById('ct_'+p.name);if(w)w.value=p.w;if(s2)s2.value=p.s;if(t)t.value=p.t;});}},
-async submit(){if(State.closing!=='editing')return;
-const btn=document.getElementById('submitClosingBtn');btn.dataset.label=btn.innerText;setLoading(btn,true);
-const user=document.getElementById('closingUser').value;
-if(!user){UI.modal('Enter name');setLoading(btn,false);return;}
-if(!confirm('Confirm submit?')){setLoading(btn,false);return;}
-const pizzas=[];
-document.querySelectorAll('[id^=cw_]').forEach(i=>{
-const n=i.id.replace('cw_','');pizzas.push({name:n,w:Number(i.value||0),s:Number(document.getElementById('cs_'+n).value||0),t:document.getElementById('ct_'+n).value});
-});
-const res=await fetch(`${URL}?action=submitClosing&data=${encodeURIComponent(JSON.stringify({user,pizzas}))}`);
-const d=await res.json();
-State.closing='submitted';
-saveState('closing',{user,pizzas});
-document.getElementById('closingStatus').innerText='Saved '+new Date(d.timestamp).toLocaleString();setLoading(btn,false);
-},
-reset(full){localStorage.removeItem('closing');if(full)location.reload();}
-};
+/* ===============================
+   STOCK FORM FUNCTIONS
+=============================== */
 
-const Drop={async load(){const res=await fetch(`${URL}?action=getLastDrop`);const d=await res.json();const div=document.getElementById('dropData');div.innerHTML='<div class=header>Pizza</div><div class=header>Qty</div>';d.forEach(x=>div.innerHTML+=`<div>${x.pizza}</div><div class=qty>${x.lastDrop}</div>`);}};
+async function loadPizzas(){
+  const res = await fetch(`${URL}?action=getPizzas`);
+  const pizzas = await res.json();
+
+  const formDiv = document.getElementById("stockForm");
+  formDiv.innerHTML = "";
+
+  formDiv.innerHTML += `
+    <span class="header">Pizza</span>
+    <span class="header">Whole pies</span>
+    <span class="header">Slices</span>
+  `;
+
+  pizzas.forEach(p=>{
+    formDiv.innerHTML += `
+      <span class="bold">${p}</span>
+      <input id="whole_${p}" class="whole" type="number" min="0">
+      <input id="slice_${p}" class="slice" type="number" min="0" step="1">
+    `;
+  });
+
+  const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
+  if(saved.pizzas){
+    saved.pizzas.forEach(p=>{
+      const whole = Math.floor(p.qty);
+      const slice = Math.round((p.qty - whole) * 8);
+      const elWhole = document.getElementById("whole_" + p.name);
+      const elSlice = document.getElementById("slice_" + p.name);
+      if(elWhole) elWhole.value = whole;
+      if(elSlice) elSlice.value = slice;
+    });
+    if(saved.user) document.getElementById("stockUser").value = saved.user;
+    if(saved.weather) document.getElementById("weather").value = saved.weather;
+    if(saved.traffic) document.getElementById("traffic").value = saved.traffic;
+    if(saved.timestamp) showLastUpdate(saved.timestamp);
+    document.getElementById("newBtn").classList.remove("hidden");
+
+    document.getElementById("stockUser").disabled = true;
+    document.getElementById("weather").disabled = true;
+    document.getElementById("traffic").disabled = true;
+    pizzas.forEach(p=>{
+      document.getElementById("whole_" + p).disabled = true;
+      document.getElementById("slice_" + p).disabled = true;
+    });
+    document.getElementById("submitStockBtn").disabled = true;
+  }
+}
+
+async function submitStock(){
+  const user = document.getElementById("stockUser").value.trim();
+  const weather = document.getElementById("weather").value;
+  const traffic = document.getElementById("traffic").value;
+
+  if(!user || !weather || !traffic){
+    alert("Please complete all fields");
+    return;
+  }
+
+  let valid = true;
+
+  document.querySelectorAll("[id^=whole_]").forEach(i=>{
+    const slice = document.getElementById("slice_" + i.id.replace("whole_",""));
+    if(i.value === "" || slice.value === "") valid=false;
+  });
+
+  if(!valid){ alert("Fill all pizza fields"); return; }
+  if(!confirm("Are you sure?")) return;
+
+  blockForm();
+
+  const pizzas=[];
+  document.querySelectorAll("[id^=whole_]").forEach(i=>{
+    const name = i.id.replace("whole_","");
+    const whole = Number(i.value)||0;
+    const slice = Number(document.getElementById("slice_" + name).value)||0;
+    const total = whole + (slice/8);
+    pizzas.push({ name, qty: total });
+  });
+
+  const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
+    user, weather, traffic, pizzas
+  }))}`);
+  const data = await res.json();
+
+  alert("Submitted");
+
+  localStorage.setItem("lastStockSubmit", JSON.stringify({
+    user, weather, traffic, pizzas, timestamp: data.timestamp
+  }));
+
+  showLastUpdate(data.timestamp);
+  document.getElementById("newBtn").classList.remove("hidden");
+
+  document.getElementById("stockUser").disabled = true;
+  document.getElementById("weather").disabled = true;
+  document.getElementById("traffic").disabled = true;
+  pizzas.forEach(p=>{
+    document.getElementById("whole_" + p.name).disabled = true;
+    document.getElementById("slice_" + p.name).disabled = true;
+  });
+  document.getElementById("submitStockBtn").disabled = true;
+}
+
+function resetForm(){
+  document.getElementById("stockUser").value="";
+  document.getElementById("weather").value="";
+  document.getElementById("traffic").value="";
+  document.querySelectorAll("[id^=whole_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.querySelectorAll("[id^=slice_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.getElementById("stockUser").disabled=false;
+  document.getElementById("weather").disabled=false;
+  document.getElementById("traffic").disabled=false;
+  document.getElementById("submitStockBtn").disabled=false;
+  document.getElementById("newBtn").classList.add("hidden");
+  document.getElementById("lastUpdate").classList.add("hidden");
+  localStorage.removeItem("lastStockSubmit");
+}
+
+function blockForm(){
+  document.querySelectorAll("input, select, button").forEach(el=>{
+    if(el.classList.contains("tabBtn") || el.id==="newBtn") return;
+    el.disabled=true;
+  });
+}
+
+function showLastUpdate(date){
+  const d = new Date(date);
+  const text = d.toLocaleDateString('en-GB') + " at " + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const el = document.getElementById("lastUpdate");
+  el.innerText = "Last update at " + text;
+  el.classList.remove("hidden");
+}
+
+async function loadDrop(){
+  const res = await fetch(`${URL}?action=getLastDrop`);
+  const data = await res.json();
+  const div = document.getElementById("dropData");
+  div.innerHTML = `<div class="header cell">Pizza</div><div class="header cell qty">QTY</div>`;
+  data.forEach(d=>{
+    div.innerHTML += `<div class="cell">${d.pizza}</div><div class="cell qty">${d.lastDrop}</div>`;
+  });
+}
+
+/* ===============================
+   CLOSING FORM FUNCTIONS
+=============================== */
+
+async function loadClosing(){
+  const res = await fetch(`${URL}?action=getPizzas`);
+  const pizzas = await res.json();
+  const formDiv = document.getElementById("closingForm");
+  formDiv.innerHTML="";
+
+  formDiv.innerHTML += `
+    <span class="header">Pizza</span>
+    <span class="header">Waste pies</span>
+    <span class="header">Waste slices</span>
+    <span class="header">Sellout time</span>
+  `;
+
+  pizzas.forEach(p=>{
+    formDiv.innerHTML += `
+      <span class="bold">${p}</span>
+      <input id="wasteWhole_${p}" class="whole" type="number" min="0">
+      <input id="wasteSlice_${p}" class="slice" type="number" min="0" step="1">
+      <input id="sellout_${p}" class="sellout" type="time">
+    `;
+  });
+
+  const saved = JSON.parse(localStorage.getItem("lastClosingSubmit") || "{}");
+  if(saved.pizzas){
+    saved.pizzas.forEach(p=>{
+      const elWhole = document.getElementById("wasteWhole_"+p.name);
+      const elSlice = document.getElementById("wasteSlice_"+p.name);
+      const elTime = document.getElementById("sellout_"+p.name);
+      if(elWhole) elWhole.value = Math.floor(p.waste);
+      if(elSlice) elSlice.value = Math.round((p.waste-Math.floor(p.waste))*8);
+      if(elTime) elTime.value = p.selloutTime;
+    });
+    if(saved.user) document.getElementById("closingUser").value = saved.user;
+    if(saved.timestamp) showLastClosingUpdate(saved.timestamp);
+    document.getElementById("newClosingBtn").classList.remove("hidden");
+    blockClosingFormInputs();
+  }
+}
+
+async function submitClosing(){
+  const user = document.getElementById("closingUser").value.trim();
+  if(!user){ alert("Please enter your name"); return; }
+
+  let valid=true;
+  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{
+    const name=i.id.replace("wasteWhole_","");
+    const slice=document.getElementById("wasteSlice_"+name);
+    const time=document.getElementById("sellout_"+name);
+    if(i.value==="" || slice.value==="" || !time.value) valid=false;
+  });
+  if(!valid){ alert("Fill all fields for each pizza"); return; }
+  if(!confirm("Are you sure?")) return;
+
+  blockClosingFormInputs();
+
+  const pizzas=[];
+  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{
+    const name=i.id.replace("wasteWhole_","");
+    const whole=Number(i.value)||0;
+    const slice=Number(document.getElementById("wasteSlice_"+name).value)||0;
+    const selloutTime=document.getElementById("sellout_"+name).value;
+    const wasteTotal=whole + (slice/8);
+    pizzas.push({name, waste:wasteTotal, selloutTime});
+  });
+
+  const res = await fetch(`${URL}?action=submitClosing&data=${encodeURIComponent(JSON.stringify({user,pizzas}))}`);
+  const data = await res.json();
+  localStorage.setItem("lastClosingSubmit", JSON.stringify({user,pizzas,timestamp:data.timestamp}));
+
+  showLastClosingUpdate(data.timestamp);
+  document.getElementById("newClosingBtn").classList.remove("hidden");
+  alert("Closing log submitted");
+}
+
+function resetClosingForm(){
+  document.getElementById("closingUser").value="";
+  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.querySelectorAll("[id^=wasteSlice_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.querySelectorAll("[id^=sellout_]").forEach(i=>{i.value=""; i.disabled=false;});
+  document.getElementById("closingUser").disabled=false;
+  document.getElementById("newClosingBtn").classList.add("hidden");
+  document.getElementById("lastClosingUpdate").classList.add("hidden");
+  localStorage.removeItem("lastClosingSubmit");
+}
+
+function blockClosingFormInputs(){
+  document.getElementById("closingUser").disabled=true;
+  document.querySelectorAll("#closingForm input").forEach(i=>i.disabled=true);
+}
+
+function showLastClosingUpdate(date){
+  const d=new Date(date);
+  const text=d.toLocaleDateString('en-GB')+" at "+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const el=document.getElementById("lastClosingUpdate");
+  el.innerText="Last update at "+text;
+  el.classList.remove("hidden");
+}
+
+setDate();
 </script>
+
 </body>
 </html>

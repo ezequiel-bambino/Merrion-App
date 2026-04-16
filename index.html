@@ -35,6 +35,7 @@ body{
   padding:15px 25px;
   margin:5px;
   font-size:22px; 
+  cursor:pointer;
 }
 
 .section{
@@ -46,7 +47,7 @@ body{
 }
 
 .left{
-  max-width:500px;
+  max-width:600px;
   margin:0 auto;
 }
 
@@ -58,9 +59,10 @@ body{
   width:300px;
   font-size:20px;
   display:block;
-  margin:0 auto;
+  margin:10px auto 0;
   text-align:center;
   text-align-last:center;
+  padding:8px;
 }
 
 #stockForm{
@@ -68,6 +70,7 @@ body{
   grid-template-columns: 1fr 100px 100px;
   gap:12px 20px;
   align-items:center;
+  margin-top:20px;
 }
 
 #stockForm span.bold{
@@ -78,8 +81,8 @@ body{
 #stockForm input.whole, 
 #stockForm input.slice{
   font-size:20px;
-  padding:6px;
-  width:80px;
+  padding:8px;
+  width:90px;
   text-align:center;
   box-sizing:border-box;
   margin:auto;
@@ -89,19 +92,35 @@ body{
   font-weight:bold;
   font-size:22px;
   text-align:left;
-  padding-bottom:6px;
+  padding-bottom:10px;
 }
 
 .bigInput{
   font-size:22px;
-  width:220px;
+  width:250px;
   text-align:center;
   margin:20px auto 15px;
+  padding:8px;
 }
 
 button{
   margin-top:20px;
   font-size:22px;
+  padding:12px 24px;
+  cursor:pointer;
+  background-color:#4CAF50;
+  color:white;
+  border:none;
+  border-radius:5px;
+}
+
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+button.tabBtn{
+  background-color:#2196F3;
 }
 
 .hidden{
@@ -112,22 +131,24 @@ button{
   font-weight:bold;
 }
 
-#lastUpdate{
-  margin-top:10px;
+#lastUpdate, #lastClosingUpdate{
+  margin-top:15px;
+  font-size:16px;
+  color:#666;
 }
 
 #dropData{
   display:grid;
-  grid-template-columns: auto 60px;
+  grid-template-columns: auto 80px;
   justify-content:center;
-  gap:20px;
-  row-gap:6px;
-  margin-top:10px;
+  gap:8px 30px;
+  margin-top:20px;
 }
 
 #dropData .header{
   font-weight:bold;
   font-size:22px;
+  padding-bottom:10px;
 }
 
 #dropData .cell{
@@ -142,9 +163,10 @@ button{
 /* CLOSING FORM TABLE */
 #closingForm {
   display:grid;
-  grid-template-columns: 1fr 100px 100px 100px; /* pizza | waste pies | waste slices | sellout time */
-  gap:12px 20px;
+  grid-template-columns: 1fr 100px 100px 120px;
+  gap:12px 15px;
   align-items:center;
+  margin-top:20px;
 }
 
 #closingForm span.bold {
@@ -154,25 +176,41 @@ button{
 
 #closingForm input {
   font-size:20px;
-  padding:6px;
-  width:80px;
+  padding:8px;
+  width:90px;
   text-align:center;
   box-sizing:border-box;
   margin:auto;
+}
+
+#closingForm input.sellout {
+  width:110px;
 }
 
 #closingForm .header{
   font-weight:bold;
   font-size:22px;
   text-align:left;
-  padding-bottom:6px;
+  padding-bottom:10px;
+}
+
+.error-message{
+  color:#f44336;
+  font-size:16px;
+  margin-top:10px;
+}
+
+.success-message{
+  color:#4CAF50;
+  font-size:16px;
+  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<img src="icon.png" class="logo">
+<img src="icon.png" class="logo" alt="Merrion Shop Logo" onerror="this.style.display='none'">
 
 <div class="title">MERRION SHOP</div>
 <div id="todayDate" class="date"></div>
@@ -184,14 +222,14 @@ button{
 <!-- STOCK -->
 <div id="stock" class="section">
 
-<input id="stockUser" class="bigInput" placeholder="Your name">
+<input id="stockUser" class="bigInput" placeholder="Your name" autocomplete="off">
 
 <div class="left">
 
 <div class="row">
   <span>Weather Forecast</span>
   <select id="weather">
-    <option value=""></option>
+    <option value="">Select weather...</option>
     <option>Sunny</option>
     <option>Cloudy</option>
     <option>Rainy</option>
@@ -202,7 +240,7 @@ button{
 <div class="row">
   <span>How's today going?</span>
   <select id="traffic">
-    <option value=""></option>
+    <option value="">Select traffic...</option>
     <option>Quiet</option>
     <option>Normal</option>
     <option>Busy</option>
@@ -227,12 +265,13 @@ button{
     <div class="header cell">Pizza</div>
     <div class="header cell qty">QTY</div>
   </div>
+  <button onclick="loadDrop()" style="margin-top:20px;">Refresh Data</button>
 </div>
 
 <!-- CLOSING FORM -->
 <div id="closing" class="section">
 
-  <input id="closingUser" class="bigInput" placeholder="Your name">
+  <input id="closingUser" class="bigInput" placeholder="Your name" autocomplete="off">
 
   <div class="left">
     <h3 style="text-align:center;">Closing Info</h3>
@@ -246,19 +285,20 @@ button{
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycby2Tz7rFagfnPhr7wXRnSPjJyXiitZwYlhLlvm_YqRGdI8ept-6CXHXqGzQ5IERmFAh/exec"; // ⚠️ Cambia a tu Web App deployeado
+const URL = "https://script.google.com/macros/s/AKfycby2Tz7rFagfnPhr7wXRnSPjJyXiitZwYlhLlvm_YqRGdI8ept-6CXHXqGzQ5IERmFAh/exec";
 
 /* ===============================
    DATE
 =============================== */
 function setDate(){
   const today = new Date();
-  document.getElementById("todayDate").innerText =
-    today.toLocaleDateString('en-GB',{
-      weekday:'long',
-      day:'numeric',
-      month:'long'
-    });
+  const options = {
+    weekday:'long',
+    day:'numeric',
+    month:'long',
+    year:'numeric'
+  };
+  document.getElementById("todayDate").innerText = today.toLocaleDateString('en-GB', options);
 }
 
 /* ===============================
@@ -268,9 +308,9 @@ function showTab(tab){
   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.getElementById(tab).classList.add("active");
 
-  if(tab === "stock" && !window.loaded){
+  if(tab === "stock" && !window.stockLoaded){
     loadPizzas();
-    window.loaded = true;
+    window.stockLoaded = true;
   }
 
   if(tab === "drop"){
@@ -288,51 +328,60 @@ function showTab(tab){
 =============================== */
 
 async function loadPizzas(){
-  const res = await fetch(`${URL}?action=getPizzas`);
-  const pizzas = await res.json();
+  try {
+    const res = await fetch(`${URL}?action=getPizzas`);
+    if (!res.ok) throw new Error('Network response was not ok');
+    const pizzas = await res.json();
 
-  const formDiv = document.getElementById("stockForm");
-  formDiv.innerHTML = "";
+    const formDiv = document.getElementById("stockForm");
+    formDiv.innerHTML = "";
 
-  formDiv.innerHTML += `
-    <span class="header">Pizza</span>
-    <span class="header">Whole pies</span>
-    <span class="header">Slices</span>
-  `;
-
-  pizzas.forEach(p=>{
     formDiv.innerHTML += `
-      <span class="bold">${p}</span>
-      <input id="whole_${p}" class="whole" type="number" min="0">
-      <input id="slice_${p}" class="slice" type="number" min="0" step="1">
+      <span class="header">Pizza</span>
+      <span class="header">Whole pies</span>
+      <span class="header">Slices</span>
     `;
-  });
 
-  const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
-  if(saved.pizzas){
-    saved.pizzas.forEach(p=>{
-      const whole = Math.floor(p.qty);
-      const slice = Math.round((p.qty - whole) * 8);
-      const elWhole = document.getElementById("whole_" + p.name);
-      const elSlice = document.getElementById("slice_" + p.name);
-      if(elWhole) elWhole.value = whole;
-      if(elSlice) elSlice.value = slice;
-    });
-    if(saved.user) document.getElementById("stockUser").value = saved.user;
-    if(saved.weather) document.getElementById("weather").value = saved.weather;
-    if(saved.traffic) document.getElementById("traffic").value = saved.traffic;
-    if(saved.timestamp) showLastUpdate(saved.timestamp);
-    document.getElementById("newBtn").classList.remove("hidden");
-
-    document.getElementById("stockUser").disabled = true;
-    document.getElementById("weather").disabled = true;
-    document.getElementById("traffic").disabled = true;
     pizzas.forEach(p=>{
-      document.getElementById("whole_" + p).disabled = true;
-      document.getElementById("slice_" + p).disabled = true;
+      const pizzaName = p.replace(/[^a-zA-Z0-9]/g, '_');
+      formDiv.innerHTML += `
+        <span class="bold">${p}</span>
+        <input id="whole_${pizzaName}" class="whole" type="number" min="0" value="0">
+        <input id="slice_${pizzaName}" class="slice" type="number" min="0" max="7" step="1" value="0">
+      `;
     });
-    document.getElementById("submitStockBtn").disabled = true;
+
+    const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
+    if(saved.pizzas && saved.user){
+      saved.pizzas.forEach(p=>{
+        const whole = Math.floor(p.qty);
+        const slice = Math.round((p.qty - whole) * 8);
+        const pizzaName = p.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const elWhole = document.getElementById("whole_" + pizzaName);
+        const elSlice = document.getElementById("slice_" + pizzaName);
+        if(elWhole) elWhole.value = whole;
+        if(elSlice) elSlice.value = slice;
+      });
+      if(saved.user) document.getElementById("stockUser").value = saved.user;
+      if(saved.weather) document.getElementById("weather").value = saved.weather;
+      if(saved.traffic) document.getElementById("traffic").value = saved.traffic;
+      if(saved.timestamp) showLastUpdate(saved.timestamp);
+      
+      document.getElementById("newBtn").classList.remove("hidden");
+      disableStockForm();
+    }
+  } catch (error) {
+    console.error('Error loading pizzas:', error);
+    alert('Error loading pizza list. Please try again.');
   }
+}
+
+function disableStockForm(){
+  document.getElementById("stockUser").disabled = true;
+  document.getElementById("weather").disabled = true;
+  document.getElementById("traffic").disabled = true;
+  document.querySelectorAll("#stockForm input").forEach(input => input.disabled = true);
+  document.getElementById("submitStockBtn").disabled = true;
 }
 
 async function submitStock(){
@@ -341,93 +390,143 @@ async function submitStock(){
   const traffic = document.getElementById("traffic").value;
 
   if(!user || !weather || !traffic){
-    alert("Please complete all fields");
+    alert("Please complete all fields (name, weather, and traffic)");
     return;
   }
 
+  const inputs = document.querySelectorAll("#stockForm input");
   let valid = true;
-
-  document.querySelectorAll("[id^=whole_]").forEach(i=>{
-    const slice = document.getElementById("slice_" + i.id.replace("whole_",""));
-    if(i.value === "" || slice.value === "") valid=false;
-  });
-
-  if(!valid){ alert("Fill all pizza fields"); return; }
-  if(!confirm("Are you sure?")) return;
-
-  blockForm();
-
-  const pizzas=[];
-  document.querySelectorAll("[id^=whole_]").forEach(i=>{
-    const name = i.id.replace("whole_","");
-    const whole = Number(i.value)||0;
-    const slice = Number(document.getElementById("slice_" + name).value)||0;
+  const pizzaData = [];
+  
+  document.querySelectorAll("[id^=whole_]").forEach(wholeInput => {
+    const pizzaName = wholeInput.id.replace("whole_", "");
+    const sliceInput = document.getElementById("slice_" + pizzaName);
+    
+    if(wholeInput.value === "" || sliceInput.value === ""){
+      valid = false;
+      return;
+    }
+    
+    const whole = parseInt(wholeInput.value) || 0;
+    const slice = parseInt(sliceInput.value) || 0;
+    
+    if(slice > 7){
+      alert(`Slices must be between 0 and 7 for ${pizzaName}`);
+      valid = false;
+      return;
+    }
+    
+    const originalName = getOriginalPizzaName(pizzaName);
     const total = whole + (slice/8);
-    pizzas.push({ name, qty: total });
+    pizzaData.push({ name: originalName, qty: total });
   });
 
-  const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
-    user, weather, traffic, pizzas
-  }))}`);
-  const data = await res.json();
+  if(!valid){ 
+    alert("Please fill all pizza fields with valid numbers"); 
+    return; 
+  }
+  
+  if(!confirm("Are you sure you want to submit this stock data?")) return;
 
-  alert("Submitted");
+  try {
+    // Disable form during submission
+    disableStockForm();
 
-  localStorage.setItem("lastStockSubmit", JSON.stringify({
-    user, weather, traffic, pizzas, timestamp: data.timestamp
-  }));
+    const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
+      user, weather, traffic, pizzas: pizzaData
+    }))}`);
+    
+    if (!res.ok) throw new Error('Submission failed');
+    const data = await res.json();
 
-  showLastUpdate(data.timestamp);
-  document.getElementById("newBtn").classList.remove("hidden");
+    alert("Stock data submitted successfully!");
 
-  document.getElementById("stockUser").disabled = true;
-  document.getElementById("weather").disabled = true;
-  document.getElementById("traffic").disabled = true;
-  pizzas.forEach(p=>{
-    document.getElementById("whole_" + p.name).disabled = true;
-    document.getElementById("slice_" + p.name).disabled = true;
-  });
-  document.getElementById("submitStockBtn").disabled = true;
+    // Save to localStorage with original names
+    const savedPizzas = pizzaData.map(p => ({
+      name: p.name,
+      qty: p.qty
+    }));
+    
+    localStorage.setItem("lastStockSubmit", JSON.stringify({
+      user, weather, traffic, pizzas: savedPizzas, timestamp: data.timestamp
+    }));
+
+    showLastUpdate(data.timestamp);
+    document.getElementById("newBtn").classList.remove("hidden");
+  } catch (error) {
+    console.error('Error submitting stock:', error);
+    alert('Error submitting data. Please try again.');
+    // Re-enable form on error
+    enableStockForm();
+  }
+}
+
+function getOriginalPizzaName(encodedName) {
+  // This function would need to map back to original names
+  // For now, we'll use a simple approach
+  const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
+  if (saved.pizzas) {
+    const found = saved.pizzas.find(p => p.name.replace(/[^a-zA-Z0-9]/g, '_') === encodedName);
+    if (found) return found.name;
+  }
+  return encodedName.replace(/_/g, ' ');
+}
+
+function enableStockForm(){
+  document.getElementById("stockUser").disabled = false;
+  document.getElementById("weather").disabled = false;
+  document.getElementById("traffic").disabled = false;
+  document.querySelectorAll("#stockForm input").forEach(input => input.disabled = false);
+  document.getElementById("submitStockBtn").disabled = false;
 }
 
 function resetForm(){
-  document.getElementById("stockUser").value="";
-  document.getElementById("weather").value="";
-  document.getElementById("traffic").value="";
-  document.querySelectorAll("[id^=whole_]").forEach(i=>{i.value=""; i.disabled=false;});
-  document.querySelectorAll("[id^=slice_]").forEach(i=>{i.value=""; i.disabled=false;});
-  document.getElementById("stockUser").disabled=false;
-  document.getElementById("weather").disabled=false;
-  document.getElementById("traffic").disabled=false;
-  document.getElementById("submitStockBtn").disabled=false;
-  document.getElementById("newBtn").classList.add("hidden");
-  document.getElementById("lastUpdate").classList.add("hidden");
-  localStorage.removeItem("lastStockSubmit");
+  if(confirm("Are you sure you want to start a new stock form? This will clear all current data.")){
+    document.getElementById("stockUser").value = "";
+    document.getElementById("weather").value = "";
+    document.getElementById("traffic").value = "";
+    document.querySelectorAll("#stockForm input").forEach(input => input.value = "0");
+    
+    enableStockForm();
+    
+    document.getElementById("newBtn").classList.add("hidden");
+    document.getElementById("lastUpdate").classList.add("hidden");
+    localStorage.removeItem("lastStockSubmit");
+  }
 }
 
-function blockForm(){
-  document.querySelectorAll("#stock input, #stock select, #stock button").forEach(el=>{
-    if(el.classList.contains("tabBtn") || el.id==="newBtn") return;
-    el.disabled = true;
-  });
-}
-
-function showLastUpdate(date){
-  const d = new Date(date);
-  const text = d.toLocaleDateString('en-GB') + " at " + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+function showLastUpdate(timestamp){
+  if(!timestamp) return;
+  
+  const d = new Date(timestamp);
+  const text = d.toLocaleDateString('en-GB') + " at " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
   const el = document.getElementById("lastUpdate");
-  el.innerText = "Last update at " + text;
+  el.innerText = "Last submitted: " + text;
   el.classList.remove("hidden");
 }
 
 async function loadDrop(){
-  const res = await fetch(`${URL}?action=getLastDrop`);
-  const data = await res.json();
-  const div = document.getElementById("dropData");
-  div.innerHTML = `<div class="header cell">Pizza</div><div class="header cell qty">QTY</div>`;
-  data.forEach(d=>{
-    div.innerHTML += `<div class="cell">${d.pizza}</div><div class="cell qty">${d.lastDrop}</div>`;
-  });
+  try {
+    const res = await fetch(`${URL}?action=getLastDrop`);
+    if (!res.ok) throw new Error('Network response was not ok');
+    const data = await res.json();
+    
+    const div = document.getElementById("dropData");
+    div.innerHTML = `<div class="header cell">Pizza</div><div class="header cell qty">QTY</div>`;
+    
+    if(data.length === 0){
+      div.innerHTML += `<div class="cell" style="grid-column:1/-1;text-align:center;">No drop data available</div>`;
+    } else {
+      data.forEach(d=>{
+        div.innerHTML += `<div class="cell">${d.pizza || 'Unknown'}</div><div class="cell qty">${d.lastDrop || 0}</div>`;
+      });
+    }
+  } catch (error) {
+    console.error('Error loading drop data:', error);
+    const div = document.getElementById("dropData");
+    div.innerHTML = `<div class="header cell">Pizza</div><div class="header cell qty">QTY</div>`;
+    div.innerHTML += `<div class="cell" style="grid-column:1/-1;text-align:center;color:red;">Error loading data</div>`;
+  }
 }
 
 /* ===============================
@@ -435,109 +534,172 @@ async function loadDrop(){
 =============================== */
 
 async function loadClosing(){
-  const res = await fetch(`${URL}?action=getPizzas`);
-  const pizzas = await res.json();
-  const formDiv = document.getElementById("closingForm");
-  formDiv.innerHTML="";
+  try {
+    const res = await fetch(`${URL}?action=getPizzas`);
+    if (!res.ok) throw new Error('Network response was not ok');
+    const pizzas = await res.json();
+    
+    const formDiv = document.getElementById("closingForm");
+    formDiv.innerHTML = "";
 
-  formDiv.innerHTML += `
-    <span class="header">Pizza</span>
-    <span class="header">Waste pies</span>
-    <span class="header">Waste slices</span>
-    <span class="header">Sellout time</span>
-  `;
-
-  pizzas.forEach(p=>{
     formDiv.innerHTML += `
-      <span class="bold">${p}</span>
-      <input id="wasteWhole_${p}" class="whole" type="number" min="0">
-      <input id="wasteSlice_${p}" class="slice" type="number" min="0" step="1">
-      <input id="sellout_${p}" class="sellout" type="time">
+      <span class="header">Pizza</span>
+      <span class="header">Waste pies</span>
+      <span class="header">Waste slices</span>
+      <span class="header">Sellout time</span>
     `;
-  });
 
-  const saved = JSON.parse(localStorage.getItem("lastClosingSubmit") || "{}");
-  if(saved.pizzas){
-    saved.pizzas.forEach(p=>{
-      const elWhole = document.getElementById("wasteWhole_"+p.name);
-      const elSlice = document.getElementById("wasteSlice_"+p.name);
-      const elTime = document.getElementById("sellout_"+p.name);
-      if(elWhole) elWhole.value = Math.floor(p.waste);
-      if(elSlice) elSlice.value = Math.round((p.waste-Math.floor(p.waste))*8);
-      if(elTime) elTime.value = p.selloutTime;
+    pizzas.forEach(p=>{
+      const pizzaName = p.replace(/[^a-zA-Z0-9]/g, '_');
+      formDiv.innerHTML += `
+        <span class="bold">${p}</span>
+        <input id="wasteWhole_${pizzaName}" class="whole" type="number" min="0" value="0">
+        <input id="wasteSlice_${pizzaName}" class="slice" type="number" min="0" max="7" step="1" value="0">
+        <input id="sellout_${pizzaName}" class="sellout" type="time" value="">
+      `;
     });
-    if(saved.user) document.getElementById("closingUser").value = saved.user;
-    if(saved.timestamp) showLastClosingUpdate(saved.timestamp);
-    document.getElementById("newClosingBtn").classList.remove("hidden");
-    blockClosingFormInputs();
+
+    const saved = JSON.parse(localStorage.getItem("lastClosingSubmit") || "{}");
+    if(saved.pizzas && saved.user){
+      saved.pizzas.forEach(p=>{
+        const pizzaName = p.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const elWhole = document.getElementById("wasteWhole_" + pizzaName);
+        const elSlice = document.getElementById("wasteSlice_" + pizzaName);
+        const elTime = document.getElementById("sellout_" + pizzaName);
+        
+        if(elWhole) elWhole.value = Math.floor(p.waste);
+        if(elSlice) elSlice.value = Math.round((p.waste-Math.floor(p.waste))*8);
+        if(elTime) elTime.value = p.selloutTime || "";
+      });
+      
+      if(saved.user) document.getElementById("closingUser").value = saved.user;
+      if(saved.timestamp) showLastClosingUpdate(saved.timestamp);
+      
+      document.getElementById("newClosingBtn").classList.remove("hidden");
+      disableClosingForm();
+    }
+  } catch (error) {
+    console.error('Error loading closing form:', error);
+    alert('Error loading closing form. Please try again.');
   }
+}
+
+function disableClosingForm(){
+  document.getElementById("closingUser").disabled = true;
+  document.querySelectorAll("#closingForm input").forEach(input => input.disabled = true);
+  document.getElementById("submitClosingBtn").disabled = true;
+}
+
+function enableClosingForm(){
+  document.getElementById("closingUser").disabled = false;
+  document.querySelectorAll("#closingForm input").forEach(input => input.disabled = false);
+  document.getElementById("submitClosingBtn").disabled = false;
 }
 
 async function submitClosing(){
   const user = document.getElementById("closingUser").value.trim();
-  if(!user){ alert("Please enter your name"); return; }
+  if(!user){ 
+    alert("Please enter your name"); 
+    return; 
+  }
 
-  let valid=true;
-  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{
-    const name=i.id.replace("wasteWhole_","");
-    const slice=document.getElementById("wasteSlice_"+name);
-    const time=document.getElementById("sellout_"+name);
-    if(i.value==="" || slice.value==="" || !time.value) valid=false;
+  let valid = true;
+  const closingData = [];
+  
+  document.querySelectorAll("[id^=wasteWhole_]").forEach(wholeInput => {
+    const pizzaName = wholeInput.id.replace("wasteWhole_", "");
+    const sliceInput = document.getElementById("wasteSlice_" + pizzaName);
+    const timeInput = document.getElementById("sellout_" + pizzaName);
+    
+    if(wholeInput.value === "" || sliceInput.value === "" || !timeInput.value){
+      valid = false;
+      return;
+    }
+    
+    const whole = parseInt(wholeInput.value) || 0;
+    const slice = parseInt(sliceInput.value) || 0;
+    
+    if(slice > 7){
+      alert(`Waste slices must be between 0 and 7 for ${pizzaName}`);
+      valid = false;
+      return;
+    }
+    
+    const originalName = getOriginalPizzaName(pizzaName);
+    const wasteTotal = whole + (slice/8);
+    closingData.push({
+      name: originalName, 
+      waste: wasteTotal, 
+      selloutTime: timeInput.value
+    });
   });
-  if(!valid){ alert("Fill all fields for each pizza"); return; }
-  if(!confirm("Are you sure?")) return;
 
-  blockClosingFormInputs();
+  if(!valid){ 
+    alert("Please fill all fields for each pizza (waste pies, waste slices, and sellout time)"); 
+    return; 
+  }
+  
+  if(!confirm("Are you sure you want to submit this closing data?")) return;
 
-  const pizzas=[];
-  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{
-    const name=i.id.replace("wasteWhole_","");
-    const whole=Number(i.value)||0;
-    const slice=Number(document.getElementById("wasteSlice_"+name).value)||0;
-    const selloutTime=document.getElementById("sellout_"+name).value;
-    const wasteTotal=whole + (slice/8);
-    pizzas.push({name, waste:wasteTotal, selloutTime});
-  });
+  try {
+    disableClosingForm();
 
-  const res = await fetch(`${URL}?action=submitClosing&data=${encodeURIComponent(JSON.stringify({user,pizzas}))}`);
-  const data = await res.json();
-  localStorage.setItem("lastClosingSubmit", JSON.stringify({user,pizzas,timestamp:data.timestamp}));
+    const res = await fetch(`${URL}?action=submitClosing&data=${encodeURIComponent(JSON.stringify({
+      user, 
+      pizzas: closingData
+    }))}`);
+    
+    if (!res.ok) throw new Error('Submission failed');
+    const data = await res.json();
 
-  showLastClosingUpdate(data.timestamp);
-  document.getElementById("newClosingBtn").classList.remove("hidden");
-  alert("Closing log submitted");
+    alert("Closing log submitted successfully!");
+
+    localStorage.setItem("lastClosingSubmit", JSON.stringify({
+      user, 
+      pizzas: closingData, 
+      timestamp: data.timestamp
+    }));
+
+    showLastClosingUpdate(data.timestamp);
+    document.getElementById("newClosingBtn").classList.remove("hidden");
+  } catch (error) {
+    console.error('Error submitting closing data:', error);
+    alert('Error submitting closing data. Please try again.');
+    enableClosingForm();
+  }
 }
 
 function resetClosingForm(){
-  document.getElementById("closingUser").value="";
-  document.querySelectorAll("[id^=wasteWhole_]").forEach(i=>{i.value=""; i.disabled=false;});
-  document.querySelectorAll("[id^=wasteSlice_]").forEach(i=>{i.value=""; i.disabled=false;});
-  document.querySelectorAll("[id^=sellout_]").forEach(i=>{i.value=""; i.disabled=false;});
-  document.getElementById("submitClosingBtn").disabled = false;
-  document.getElementById("closingUser").disabled=false;
-  document.getElementById("newClosingBtn").classList.add("hidden");
-  document.getElementById("lastClosingUpdate").classList.add("hidden");
-  localStorage.removeItem("lastClosingSubmit");
+  if(confirm("Are you sure you want to start a new closing form? This will clear all current data.")){
+    document.getElementById("closingUser").value = "";
+    document.querySelectorAll("#closingForm input").forEach(input => input.value = "");
+    
+    enableClosingForm();
+    
+    document.getElementById("newClosingBtn").classList.add("hidden");
+    document.getElementById("lastClosingUpdate").classList.add("hidden");
+    localStorage.removeItem("lastClosingSubmit");
+  }
 }
 
-function blockClosingFormInputs(){
-  document.getElementById("closingUser").disabled = true;
-
-  document.querySelectorAll("#closing input, #closing button").forEach(i=>{
-    if(i.id === "newClosingBtn") return;
-    i.disabled = true;
-  });
-}
-
-function showLastClosingUpdate(date){
-  const d=new Date(date);
-  const text=d.toLocaleDateString('en-GB')+" at "+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  const el=document.getElementById("lastClosingUpdate");
-  el.innerText="Last update at "+text;
+function showLastClosingUpdate(timestamp){
+  if(!timestamp) return;
+  
+  const d = new Date(timestamp);
+  const text = d.toLocaleDateString('en-GB') + " at " + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  const el = document.getElementById("lastClosingUpdate");
+  el.innerText = "Last submitted: " + text;
   el.classList.remove("hidden");
 }
 
+// Initialize
 setDate();
+
+// Handle image loading error
+document.querySelector('.logo').addEventListener('error', function() {
+  this.style.display = 'none';
+});
+
 </script>
 
 </body>

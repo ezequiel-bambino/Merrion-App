@@ -47,7 +47,7 @@ body{
 }
 
 .left{
-  max-width:600px;
+  max-width:800px;
   margin:0 auto;
 }
 
@@ -160,50 +160,103 @@ button.tabBtn{
   font-size:20px;
 }
 
-/* CLOSING FORM TABLE */
-#closingForm {
-  display:grid;
-  grid-template-columns: 1fr 100px 100px 120px;
-  gap:12px 15px;
-  align-items:center;
-  margin-top:20px;
+/* CLOSING FORM - NUEVO ESTILO */
+.closing-item {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin: 15px 0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 
-#closingForm span.bold {
-  text-align:left;
-  font-size:20px;
+.pizza-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
 }
 
-#closingForm input {
-  font-size:20px;
-  padding:8px;
-  width:90px;
-  text-align:center;
-  box-sizing:border-box;
-  margin:auto;
+.status-selector {
+  margin-bottom: 20px;
 }
 
-#closingForm input.sellout {
-  width:110px;
+.status-option {
+  display: inline-block;
+  margin: 0 15px;
 }
 
-#closingForm .header{
-  font-weight:bold;
-  font-size:22px;
-  text-align:left;
-  padding-bottom:10px;
+.status-option label {
+  font-size: 18px;
+  margin-left: 8px;
+  cursor: pointer;
 }
 
-.error-message{
-  color:#f44336;
-  font-size:16px;
-  margin-top:10px;
+.status-option input[type="radio"] {
+  transform: scale(1.3);
+  margin-right: 5px;
+  cursor: pointer;
 }
 
-.success-message{
-  color:#4CAF50;
-  font-size:16px;
-  margin-top:10px;
+.waste-section, .sellout-section {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.waste-section {
+  background-color: #fff3e0;
+}
+
+.sellout-section {
+  background-color: #e8f5e9;
+}
+
+.waste-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  align-items: center;
+}
+
+.waste-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.waste-input-group label {
+  font-size: 16px;
+  margin-bottom: 5px;
+  color: #666;
+}
+
+.waste-input-group input {
+  font-size: 20px;
+  padding: 8px;
+  width: 100px;
+  text-align: center;
+}
+
+.sellout-section input {
+  font-size: 20px;
+  padding: 8px;
+  width: 150px;
+  text-align: center;
+}
+
+.note {
+  font-size: 14px;
+  color: #666;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .waste-inputs {
+    flex-direction: column;
+    gap: 15px;
+  }
 }
 </style>
 </head>
@@ -268,18 +321,19 @@ button.tabBtn{
   <button onclick="loadDrop()" style="margin-top:20px;">Refresh Data</button>
 </div>
 
-<!-- CLOSING FORM -->
+<!-- CLOSING FORM - NUEVA VERSIÓN -->
 <div id="closing" class="section">
 
   <input id="closingUser" class="bigInput" placeholder="Your name" autocomplete="off">
 
   <div class="left">
-    <h3 style="text-align:center;">Closing Info</h3>
+    <h3 style="text-align:center;">End of Day Report</h3>
+    <p style="color:#666; margin-bottom:20px;">For each pizza, indicate if it sold out or if there was waste</p>
 
     <div id="closingForm"></div>
 
-    <button id="submitClosingBtn" onclick="submitClosing()">Submit Log</button>
-    <button id="newClosingBtn" class="hidden" onclick="resetClosingForm()">New Submit</button>
+    <button id="submitClosingBtn" onclick="submitClosing()">Submit End of Day Report</button>
+    <button id="newClosingBtn" class="hidden" onclick="resetClosingForm()">New Report</button>
     <div id="lastClosingUpdate" class="hidden"></div>
   </div>
 </div>
@@ -384,6 +438,14 @@ function disableStockForm(){
   document.getElementById("submitStockBtn").disabled = true;
 }
 
+function enableStockForm(){
+  document.getElementById("stockUser").disabled = false;
+  document.getElementById("weather").disabled = false;
+  document.getElementById("traffic").disabled = false;
+  document.querySelectorAll("#stockForm input").forEach(input => input.disabled = false);
+  document.getElementById("submitStockBtn").disabled = false;
+}
+
 async function submitStock(){
   const user = document.getElementById("stockUser").value.trim();
   const weather = document.getElementById("weather").value;
@@ -394,7 +456,6 @@ async function submitStock(){
     return;
   }
 
-  const inputs = document.querySelectorAll("#stockForm input");
   let valid = true;
   const pizzaData = [];
   
@@ -411,7 +472,7 @@ async function submitStock(){
     const slice = parseInt(sliceInput.value) || 0;
     
     if(slice > 7){
-      alert(`Slices must be between 0 and 7 for ${pizzaName}`);
+      alert(`Slices must be between 0 and 7`);
       valid = false;
       return;
     }
@@ -429,7 +490,6 @@ async function submitStock(){
   if(!confirm("Are you sure you want to submit this stock data?")) return;
 
   try {
-    // Disable form during submission
     disableStockForm();
 
     const res = await fetch(`${URL}?action=submitStock&data=${encodeURIComponent(JSON.stringify({
@@ -441,7 +501,6 @@ async function submitStock(){
 
     alert("Stock data submitted successfully!");
 
-    // Save to localStorage with original names
     const savedPizzas = pizzaData.map(p => ({
       name: p.name,
       qty: p.qty
@@ -456,28 +515,17 @@ async function submitStock(){
   } catch (error) {
     console.error('Error submitting stock:', error);
     alert('Error submitting data. Please try again.');
-    // Re-enable form on error
     enableStockForm();
   }
 }
 
 function getOriginalPizzaName(encodedName) {
-  // This function would need to map back to original names
-  // For now, we'll use a simple approach
   const saved = JSON.parse(localStorage.getItem("lastStockSubmit") || "{}");
   if (saved.pizzas) {
     const found = saved.pizzas.find(p => p.name.replace(/[^a-zA-Z0-9]/g, '_') === encodedName);
     if (found) return found.name;
   }
   return encodedName.replace(/_/g, ' ');
-}
-
-function enableStockForm(){
-  document.getElementById("stockUser").disabled = false;
-  document.getElementById("weather").disabled = false;
-  document.getElementById("traffic").disabled = false;
-  document.querySelectorAll("#stockForm input").forEach(input => input.disabled = false);
-  document.getElementById("submitStockBtn").disabled = false;
 }
 
 function resetForm(){
@@ -530,7 +578,7 @@ async function loadDrop(){
 }
 
 /* ===============================
-   CLOSING FORM FUNCTIONS
+   CLOSING FORM - NUEVA VERSIÓN
 =============================== */
 
 async function loadClosing(){
@@ -542,34 +590,94 @@ async function loadClosing(){
     const formDiv = document.getElementById("closingForm");
     formDiv.innerHTML = "";
 
-    formDiv.innerHTML += `
-      <span class="header">Pizza</span>
-      <span class="header">Waste pies</span>
-      <span class="header">Waste slices</span>
-      <span class="header">Sellout time</span>
-    `;
-
-    pizzas.forEach(p=>{
+    pizzas.forEach(p => {
       const pizzaName = p.replace(/[^a-zA-Z0-9]/g, '_');
-      formDiv.innerHTML += `
-        <span class="bold">${p}</span>
-        <input id="wasteWhole_${pizzaName}" class="whole" type="number" min="0" value="0">
-        <input id="wasteSlice_${pizzaName}" class="slice" type="number" min="0" max="7" step="1" value="0">
-        <input id="sellout_${pizzaName}" class="sellout" type="time" value="">
+      
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'closing-item';
+      itemDiv.innerHTML = `
+        <div class="pizza-name">${p}</div>
+        
+        <div class="status-selector">
+          <span class="status-option">
+            <input type="radio" name="status_${pizzaName}" id="waste_${pizzaName}" value="waste" checked>
+            <label for="waste_${pizzaName}">Had Waste</label>
+          </span>
+          <span class="status-option">
+            <input type="radio" name="status_${pizzaName}" id="soldout_${pizzaName}" value="soldout">
+            <label for="soldout_${pizzaName}">Sold Out</label>
+          </span>
+        </div>
+        
+        <div id="wasteSection_${pizzaName}" class="waste-section">
+          <div class="waste-inputs">
+            <div class="waste-input-group">
+              <label>Whole Pies</label>
+              <input type="number" id="wasteWhole_${pizzaName}" min="0" value="0">
+            </div>
+            <div class="waste-input-group">
+              <label>Slices</label>
+              <input type="number" id="wasteSlice_${pizzaName}" min="0" max="7" value="0">
+            </div>
+          </div>
+          <div class="note">Enter the amount left at end of day</div>
+        </div>
+        
+        <div id="selloutSection_${pizzaName}" class="sellout-section hidden">
+          <label>Sold out at:</label>
+          <input type="time" id="sellout_${pizzaName}" value="">
+          <div class="note">Time when the last slice was sold</div>
+        </div>
       `;
+      
+      formDiv.appendChild(itemDiv);
+      
+      // Add event listeners for radio buttons
+      const wasteRadio = document.getElementById(`waste_${pizzaName}`);
+      const soldoutRadio = document.getElementById(`soldout_${pizzaName}`);
+      const wasteSection = document.getElementById(`wasteSection_${pizzaName}`);
+      const selloutSection = document.getElementById(`selloutSection_${pizzaName}`);
+      
+      wasteRadio.addEventListener('change', () => {
+        wasteSection.classList.remove('hidden');
+        selloutSection.classList.add('hidden');
+        // Clear sellout time when switching to waste
+        document.getElementById(`sellout_${pizzaName}`).value = '';
+      });
+      
+      soldoutRadio.addEventListener('change', () => {
+        wasteSection.classList.add('hidden');
+        selloutSection.classList.remove('hidden');
+        // Clear waste values when switching to sold out
+        document.getElementById(`wasteWhole_${pizzaName}`).value = '0';
+        document.getElementById(`wasteSlice_${pizzaName}`).value = '0';
+      });
     });
 
+    // Load saved data if exists
     const saved = JSON.parse(localStorage.getItem("lastClosingSubmit") || "{}");
     if(saved.pizzas && saved.user){
-      saved.pizzas.forEach(p=>{
+      saved.pizzas.forEach(p => {
         const pizzaName = p.name.replace(/[^a-zA-Z0-9]/g, '_');
-        const elWhole = document.getElementById("wasteWhole_" + pizzaName);
-        const elSlice = document.getElementById("wasteSlice_" + pizzaName);
-        const elTime = document.getElementById("sellout_" + pizzaName);
         
-        if(elWhole) elWhole.value = Math.floor(p.waste);
-        if(elSlice) elSlice.value = Math.round((p.waste-Math.floor(p.waste))*8);
-        if(elTime) elTime.value = p.selloutTime || "";
+        if(p.selloutTime) {
+          // Was sold out
+          const soldoutRadio = document.getElementById(`soldout_${pizzaName}`);
+          if(soldoutRadio) {
+            soldoutRadio.checked = true;
+            document.getElementById(`wasteSection_${pizzaName}`).classList.add('hidden');
+            document.getElementById(`selloutSection_${pizzaName}`).classList.remove('hidden');
+            document.getElementById(`sellout_${pizzaName}`).value = p.selloutTime;
+          }
+        } else if(p.waste !== undefined) {
+          // Had waste
+          const wasteRadio = document.getElementById(`waste_${pizzaName}`);
+          if(wasteRadio) {
+            wasteRadio.checked = true;
+            document.getElementById(`wasteWhole_${pizzaName}`).value = Math.floor(p.waste);
+            document.getElementById(`wasteSlice_${pizzaName}`).value = Math.round((p.waste - Math.floor(p.waste)) * 8);
+          }
+        }
       });
       
       if(saved.user) document.getElementById("closingUser").value = saved.user;
@@ -586,14 +694,17 @@ async function loadClosing(){
 
 function disableClosingForm(){
   document.getElementById("closingUser").disabled = true;
-  document.querySelectorAll("#closingForm input").forEach(input => input.disabled = true);
+  document.querySelectorAll("#closingForm input, #closingForm button").forEach(el => {
+    if(el.id !== 'newClosingBtn') el.disabled = true;
+  });
   document.getElementById("submitClosingBtn").disabled = true;
 }
 
 function enableClosingForm(){
   document.getElementById("closingUser").disabled = false;
-  document.querySelectorAll("#closingForm input").forEach(input => input.disabled = false);
-  document.getElementById("submitClosingBtn").disabled = false;
+  document.querySelectorAll("#closingForm input, #closingForm button").forEach(el => {
+    el.disabled = false;
+  });
 }
 
 async function submitClosing(){
@@ -603,43 +714,65 @@ async function submitClosing(){
     return; 
   }
 
-  let valid = true;
   const closingData = [];
+  let valid = true;
   
-  document.querySelectorAll("[id^=wasteWhole_]").forEach(wholeInput => {
-    const pizzaName = wholeInput.id.replace("wasteWhole_", "");
-    const sliceInput = document.getElementById("wasteSlice_" + pizzaName);
-    const timeInput = document.getElementById("sellout_" + pizzaName);
+  document.querySelectorAll(".closing-item").forEach(item => {
+    const pizzaNameElement = item.querySelector('.pizza-name');
+    if(!pizzaNameElement) return;
     
-    if(wholeInput.value === "" || sliceInput.value === "" || !timeInput.value){
-      valid = false;
-      return;
+    const originalName = pizzaNameElement.textContent;
+    const pizzaName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
+    
+    const isWaste = document.getElementById(`waste_${pizzaName}`).checked;
+    
+    if(isWaste) {
+      // Validate waste
+      const wasteWhole = document.getElementById(`wasteWhole_${pizzaName}`);
+      const wasteSlice = document.getElementById(`wasteSlice_${pizzaName}`);
+      
+      if(wasteWhole.value === "" || wasteSlice.value === "") {
+        alert(`Please fill waste amounts for ${originalName}`);
+        valid = false;
+        return;
+      }
+      
+      const whole = parseInt(wasteWhole.value) || 0;
+      const slice = parseInt(wasteSlice.value) || 0;
+      
+      if(slice > 7) {
+        alert(`Slices must be between 0 and 7 for ${originalName}`);
+        valid = false;
+        return;
+      }
+      
+      const wasteTotal = whole + (slice/8);
+      closingData.push({
+        name: originalName,
+        waste: wasteTotal,
+        selloutTime: null
+      });
+    } else {
+      // Validate sellout
+      const selloutTime = document.getElementById(`sellout_${pizzaName}`);
+      
+      if(!selloutTime.value) {
+        alert(`Please enter sellout time for ${originalName}`);
+        valid = false;
+        return;
+      }
+      
+      closingData.push({
+        name: originalName,
+        waste: 0,
+        selloutTime: selloutTime.value
+      });
     }
-    
-    const whole = parseInt(wholeInput.value) || 0;
-    const slice = parseInt(sliceInput.value) || 0;
-    
-    if(slice > 7){
-      alert(`Waste slices must be between 0 and 7 for ${pizzaName}`);
-      valid = false;
-      return;
-    }
-    
-    const originalName = getOriginalPizzaName(pizzaName);
-    const wasteTotal = whole + (slice/8);
-    closingData.push({
-      name: originalName, 
-      waste: wasteTotal, 
-      selloutTime: timeInput.value
-    });
   });
 
-  if(!valid){ 
-    alert("Please fill all fields for each pizza (waste pies, waste slices, and sellout time)"); 
-    return; 
-  }
+  if(!valid) return;
   
-  if(!confirm("Are you sure you want to submit this closing data?")) return;
+  if(!confirm("Are you sure you want to submit this end of day report?")) return;
 
   try {
     disableClosingForm();
@@ -652,7 +785,7 @@ async function submitClosing(){
     if (!res.ok) throw new Error('Submission failed');
     const data = await res.json();
 
-    alert("Closing log submitted successfully!");
+    alert("End of day report submitted successfully!");
 
     localStorage.setItem("lastClosingSubmit", JSON.stringify({
       user, 
@@ -664,15 +797,32 @@ async function submitClosing(){
     document.getElementById("newClosingBtn").classList.remove("hidden");
   } catch (error) {
     console.error('Error submitting closing data:', error);
-    alert('Error submitting closing data. Please try again.');
+    alert('Error submitting data. Please try again.');
     enableClosingForm();
   }
 }
 
 function resetClosingForm(){
-  if(confirm("Are you sure you want to start a new closing form? This will clear all current data.")){
+  if(confirm("Are you sure you want to start a new report? This will clear all current data.")){
     document.getElementById("closingUser").value = "";
-    document.querySelectorAll("#closingForm input").forEach(input => input.value = "");
+    
+    // Reset all items to waste with 0 values
+    document.querySelectorAll(".closing-item").forEach(item => {
+      const pizzaNameElement = item.querySelector('.pizza-name');
+      if(!pizzaNameElement) return;
+      
+      const pizzaName = pizzaNameElement.textContent.replace(/[^a-zA-Z0-9]/g, '_');
+      
+      // Set to waste mode
+      document.getElementById(`waste_${pizzaName}`).checked = true;
+      document.getElementById(`wasteSection_${pizzaName}`).classList.remove('hidden');
+      document.getElementById(`selloutSection_${pizzaName}`).classList.add('hidden');
+      
+      // Clear values
+      document.getElementById(`wasteWhole_${pizzaName}`).value = '0';
+      document.getElementById(`wasteSlice_${pizzaName}`).value = '0';
+      document.getElementById(`sellout_${pizzaName}`).value = '';
+    });
     
     enableClosingForm();
     
